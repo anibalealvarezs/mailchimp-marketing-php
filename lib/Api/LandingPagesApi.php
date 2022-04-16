@@ -29,39 +29,17 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\RequestOptions;
+use InvalidArgumentException;
 use MailchimpMarketing\ApiException;
-use MailchimpMarketing\Configuration;
-use MailchimpMarketing\HeaderSelector;
+use MailchimpMarketing\ApiTrait;
 use MailchimpMarketing\ObjectSerializer;
+use stdClass;
 
 class LandingPagesApi
 {
-    protected $client;
-    protected $config;
-    protected $headerSelector;
-
-    public function __construct(Configuration $config = null)
-    {
-        $this->client = new Client([
-            'defaults' => [
-                'timeout' => 120.0
-            ]
-        ]);
-        $this->headerSelector = new HeaderSelector();
-        $this->config = $config ?: new Configuration();
-    }
-
-    public function getConfig()
-    {
-        return $this->config;
-    }
+    use ApiTrait;
 
     public function deletePage($page_id)
     {
@@ -74,11 +52,7 @@ class LandingPagesApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -95,86 +69,39 @@ class LandingPagesApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deletePageRequest($page_id)
+    protected function deletePageRequest($page_id): Request
     {
         // verify the required parameter 'page_id' is set
         if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $page_id when calling '
             );
         }
 
         $resourcePath = '/landing-pages/{page_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($page_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'page_id' . '}',
-                ObjectSerializer::toPathValue($page_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'page_id' . '}',
+            ObjectSerializer::toPathValue($page_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -201,7 +128,7 @@ class LandingPagesApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -209,8 +136,7 @@ class LandingPagesApi
 
     public function getAll($sort_dir = null, $sort_field = null, $fields = null, $exclude_fields = null, $count = '10')
     {
-        $response = $this->getAllWithHttpInfo($sort_dir, $sort_field, $fields, $exclude_fields, $count);
-        return $response;
+        return $this->getAllWithHttpInfo($sort_dir, $sort_field, $fields, $exclude_fields, $count);
     }
 
     public function getAllWithHttpInfo($sort_dir = null, $sort_field = null, $fields = null, $exclude_fields = null, $count = '10')
@@ -219,11 +145,7 @@ class LandingPagesApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -240,30 +162,24 @@ class LandingPagesApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getAllRequest($sort_dir = null, $sort_field = null, $fields = null, $exclude_fields = null, $count = '10')
+    protected function getAllRequest($sort_dir = null, $sort_field = null, $fields = null, $exclude_fields = null, $count = '10'): Request
     {
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling LandingPagesApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling LandingPagesApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/landing-pages';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if ($sort_dir !== null) {
             $queryParams['sort_dir'] = ObjectSerializer::toQueryValue($sort_dir);
@@ -293,49 +209,10 @@ class LandingPagesApi
 
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -362,7 +239,7 @@ class LandingPagesApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -370,8 +247,7 @@ class LandingPagesApi
 
     public function getPage($page_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getPageWithHttpInfo($page_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getPageWithHttpInfo($page_id, $fields, $exclude_fields);
     }
 
     public function getPageWithHttpInfo($page_id, $fields = null, $exclude_fields = null)
@@ -380,11 +256,7 @@ class LandingPagesApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -401,32 +273,26 @@ class LandingPagesApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getPageRequest($page_id, $fields = null, $exclude_fields = null)
+    protected function getPageRequest($page_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'page_id' is set
         if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $page_id when calling '
             );
         }
 
         $resourcePath = '/landing-pages/{page_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -443,58 +309,17 @@ class LandingPagesApi
         }
 
         // path params
-        if ($page_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'page_id' . '}',
-                ObjectSerializer::toPathValue($page_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'page_id' . '}',
+            ObjectSerializer::toPathValue($page_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -521,7 +346,7 @@ class LandingPagesApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -529,8 +354,7 @@ class LandingPagesApi
 
     public function getPageContent($page_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getPageContentWithHttpInfo($page_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getPageContentWithHttpInfo($page_id, $fields, $exclude_fields);
     }
 
     public function getPageContentWithHttpInfo($page_id, $fields = null, $exclude_fields = null)
@@ -539,11 +363,7 @@ class LandingPagesApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -560,32 +380,26 @@ class LandingPagesApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getPageContentRequest($page_id, $fields = null, $exclude_fields = null)
+    protected function getPageContentRequest($page_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'page_id' is set
         if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $page_id when calling '
             );
         }
 
         $resourcePath = '/landing-pages/{page_id}/content';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -602,58 +416,17 @@ class LandingPagesApi
         }
 
         // path params
-        if ($page_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'page_id' . '}',
-                ObjectSerializer::toPathValue($page_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'page_id' . '}',
+            ObjectSerializer::toPathValue($page_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -680,7 +453,7 @@ class LandingPagesApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -688,8 +461,7 @@ class LandingPagesApi
 
     public function updatePage($page_id, $body)
     {
-        $response = $this->updatePageWithHttpInfo($page_id, $body);
-        return $response;
+        return $this->updatePageWithHttpInfo($page_id, $body);
     }
 
     public function updatePageWithHttpInfo($page_id, $body)
@@ -698,11 +470,7 @@ class LandingPagesApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -719,93 +487,59 @@ class LandingPagesApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updatePageRequest($page_id, $body)
+    protected function updatePageRequest($page_id, $body): Request
     {
         // verify the required parameter 'page_id' is set
         if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $page_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/landing-pages/{page_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($page_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'page_id' . '}',
-                ObjectSerializer::toPathValue($page_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'page_id' . '}',
+            ObjectSerializer::toPathValue($page_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -834,7 +568,7 @@ class LandingPagesApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -842,8 +576,7 @@ class LandingPagesApi
 
     public function create($body, $use_default_list = null)
     {
-        $response = $this->createWithHttpInfo($body, $use_default_list);
-        return $response;
+        return $this->createWithHttpInfo($body, $use_default_list);
     }
 
     public function createWithHttpInfo($body, $use_default_list = null)
@@ -852,11 +585,7 @@ class LandingPagesApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -873,32 +602,26 @@ class LandingPagesApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function createRequest($body, $use_default_list = null)
+    protected function createRequest($body, $use_default_list = null): Request
     {
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/landing-pages';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if ($use_default_list !== null) {
             $queryParams['use_default_list'] = ObjectSerializer::toQueryValue($use_default_list);
@@ -906,50 +629,24 @@ class LandingPagesApi
 
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -978,7 +675,7 @@ class LandingPagesApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -986,8 +683,7 @@ class LandingPagesApi
 
     public function publishPage($page_id)
     {
-        $response = $this->publishPageWithHttpInfo($page_id);
-        return $response;
+        return $this->publishPageWithHttpInfo($page_id);
     }
 
     public function publishPageWithHttpInfo($page_id)
@@ -996,11 +692,7 @@ class LandingPagesApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1017,86 +709,39 @@ class LandingPagesApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function publishPageRequest($page_id)
+    protected function publishPageRequest($page_id): Request
     {
         // verify the required parameter 'page_id' is set
         if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $page_id when calling '
             );
         }
 
         $resourcePath = '/landing-pages/{page_id}/actions/publish';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($page_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'page_id' . '}',
-                ObjectSerializer::toPathValue($page_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'page_id' . '}',
+            ObjectSerializer::toPathValue($page_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -1123,7 +768,7 @@ class LandingPagesApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1140,11 +785,7 @@ class LandingPagesApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1161,86 +802,39 @@ class LandingPagesApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function unpublishPageRequest($page_id)
+    protected function unpublishPageRequest($page_id): Request
     {
         // verify the required parameter 'page_id' is set
         if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $page_id when calling '
             );
         }
 
         $resourcePath = '/landing-pages/{page_id}/actions/unpublish';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($page_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'page_id' . '}',
-                ObjectSerializer::toPathValue($page_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'page_id' . '}',
+            ObjectSerializer::toPathValue($page_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -1267,26 +861,9 @@ class LandingPagesApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
-    }
-
-    protected function createHttpClientOption()
-    {
-        $options = [];
-        if ($this->config->getDebug()) {
-            $options[RequestOptions::DEBUG] = fopen($this->config->getDebugFile(), 'a');
-            if (!$options[RequestOptions::DEBUG]) {
-                throw new \RuntimeException('Failed to open the debug file: ' . $this->config->getDebugFile());
-            }
-        }
-
-        if ($this->config->getTimeout()) {
-            $options[RequestOptions::TIMEOUT] = $this->config->getTimeout();
-        }
-
-        return $options;
     }
 }

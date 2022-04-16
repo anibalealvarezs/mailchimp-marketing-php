@@ -28,7 +28,7 @@
 
 namespace MailchimpMarketing;
 
-use \Exception;
+use Exception;
 
 /**
  * ApiException Class Doc Comment
@@ -82,7 +82,7 @@ class ApiException extends Exception
      *
      * @return string[]|null HTTP response header
      */
-    public function getResponseHeaders()
+    public function getResponseHeaders(): ?array
     {
         return $this->responseHeaders;
     }

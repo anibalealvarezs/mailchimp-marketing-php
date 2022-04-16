@@ -29,44 +29,21 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\MultipartStream;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\RequestOptions;
+use InvalidArgumentException;
 use MailchimpMarketing\ApiException;
-use MailchimpMarketing\Configuration;
-use MailchimpMarketing\HeaderSelector;
+use MailchimpMarketing\ApiTrait;
 use MailchimpMarketing\ObjectSerializer;
 
 class AuthorizedAppsApi
 {
-    protected $client;
-    protected $config;
-    protected $headerSelector;
-
-    public function __construct(Configuration $config = null)
-    {
-        $this->client = new Client([
-            'defaults' => [
-                'timeout' => 120.0
-            ]
-        ]);
-        $this->headerSelector = new HeaderSelector();
-        $this->config = $config ?: new Configuration();
-    }
-
-    public function getConfig()
-    {
-        return $this->config;
-    }
+    use ApiTrait;
 
     public function list($fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->listWithHttpInfo($fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->listWithHttpInfo($fields, $exclude_fields, $count, $offset);
     }
 
     public function listWithHttpInfo($fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -75,11 +52,7 @@ class AuthorizedAppsApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -96,30 +69,24 @@ class AuthorizedAppsApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function listRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0')
+    protected function listRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling AuthorizedAppsApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling AuthorizedAppsApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/authorized-apps';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -145,49 +112,10 @@ class AuthorizedAppsApi
 
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -214,7 +142,7 @@ class AuthorizedAppsApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -222,8 +150,7 @@ class AuthorizedAppsApi
 
     public function get($app_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getWithHttpInfo($app_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getWithHttpInfo($app_id, $fields, $exclude_fields);
     }
 
     public function getWithHttpInfo($app_id, $fields = null, $exclude_fields = null)
@@ -232,11 +159,7 @@ class AuthorizedAppsApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -253,32 +176,26 @@ class AuthorizedAppsApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getRequest($app_id, $fields = null, $exclude_fields = null)
+    protected function getRequest($app_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'app_id' is set
         if ($app_id === null || (is_array($app_id) && count($app_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $app_id when calling '
             );
         }
 
         $resourcePath = '/authorized-apps/{app_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -295,58 +212,17 @@ class AuthorizedAppsApi
         }
 
         // path params
-        if ($app_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'app_id' . '}',
-                ObjectSerializer::toPathValue($app_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'app_id' . '}',
+            ObjectSerializer::toPathValue($app_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -373,26 +249,9 @@ class AuthorizedAppsApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
-    }
-
-    protected function createHttpClientOption()
-    {
-        $options = [];
-        if ($this->config->getDebug()) {
-            $options[RequestOptions::DEBUG] = fopen($this->config->getDebugFile(), 'a');
-            if (!$options[RequestOptions::DEBUG]) {
-                throw new \RuntimeException('Failed to open the debug file: ' . $this->config->getDebugFile());
-            }
-        }
-
-        if ($this->config->getTimeout()) {
-            $options[RequestOptions::TIMEOUT] = $this->config->getTimeout();
-        }
-
-        return $options;
     }
 }

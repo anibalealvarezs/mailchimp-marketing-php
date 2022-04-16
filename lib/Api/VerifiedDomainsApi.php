@@ -29,57 +29,35 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\MultipartStream;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\RequestOptions;
+use InvalidArgumentException;
 use MailchimpMarketing\ApiException;
-use MailchimpMarketing\Configuration;
-use MailchimpMarketing\HeaderSelector;
+use MailchimpMarketing\ApiTrait;
 use MailchimpMarketing\ObjectSerializer;
+use stdClass;
 
 class VerifiedDomainsApi
 {
-    protected $client;
-    protected $config;
-    protected $headerSelector;
+    use ApiTrait;
 
-    public function __construct(Configuration $config = null)
-    {
-        $this->client = new Client([
-            'defaults' => [
-                'timeout' => 120.0
-            ]
-        ]);
-        $this->headerSelector = new HeaderSelector();
-        $this->config = $config ?: new Configuration();
-    }
-
-    public function getConfig()
-    {
-        return $this->config;
-    }
-
+    /**
+     */
     public function createVerifiedDomain($body)
     {
-        $response = $this->createVerifiedDomainWithHttpInfo($body);
-        return $response;
+        return $this->createVerifiedDomainWithHttpInfo($body);
     }
 
+    /**
+     */
     public function createVerifiedDomainWithHttpInfo($body)
     {
         $request = $this->createVerifiedDomainRequest($body);
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -96,111 +74,29 @@ class VerifiedDomainsApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function createVerifiedDomainRequest($body)
+    protected function createVerifiedDomainRequest($body): Request
     {
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/verified-domains';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
-        $multipart = false;
 
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->setBodyParams($body, $headerParams, $queryParams, $resourcePath);
     }
 
     public function deleteDomain($domain_name)
@@ -214,11 +110,7 @@ class VerifiedDomainsApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -235,86 +127,39 @@ class VerifiedDomainsApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteDomainRequest($domain_name)
+    protected function deleteDomainRequest($domain_name): Request
     {
         // verify the required parameter 'domain_name' is set
         if ($domain_name === null || (is_array($domain_name) && count($domain_name) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $domain_name when calling '
             );
         }
 
         $resourcePath = '/verified-domains/{domain_name}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($domain_name !== null) {
-            $resourcePath = str_replace(
-                '{' . 'domain_name' . '}',
-                ObjectSerializer::toPathValue($domain_name),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'domain_name' . '}',
+            ObjectSerializer::toPathValue($domain_name),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -341,7 +186,7 @@ class VerifiedDomainsApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -349,403 +194,133 @@ class VerifiedDomainsApi
 
     public function getDomain($domain_name)
     {
-        $response = $this->getDomainWithHttpInfo($domain_name);
-        return $response;
+        return $this->getDomainWithHttpInfo($domain_name);
     }
 
     public function getDomainWithHttpInfo($domain_name)
     {
         $request = $this->getDomainRequest($domain_name);
 
-        try {
-            $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
-
-            return $content;
-
-        } catch (ApiException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
-    protected function getDomainRequest($domain_name)
+    protected function getDomainRequest($domain_name): Request
     {
         // verify the required parameter 'domain_name' is set
         if ($domain_name === null || (is_array($domain_name) && count($domain_name) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $domain_name when calling '
             );
         }
 
         $resourcePath = '/verified-domains/{domain_name}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($domain_name !== null) {
-            $resourcePath = str_replace(
-                '{' . 'domain_name' . '}',
-                ObjectSerializer::toPathValue($domain_name),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'domain_name' . '}',
+            ObjectSerializer::toPathValue($domain_name),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->setBodyParams2($httpBody, $headerParams, $queryParams, $resourcePath);
     }
 
     public function getVerifiedDomainsAll()
     {
-        $response = $this->getVerifiedDomainsAllWithHttpInfo();
-        return $response;
+        return $this->getVerifiedDomainsAllWithHttpInfo();
     }
 
     public function getVerifiedDomainsAllWithHttpInfo()
     {
         $request = $this->getVerifiedDomainsAllRequest();
 
-        try {
-            $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
-
-            return $content;
-
-        } catch (ApiException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
-    protected function getVerifiedDomainsAllRequest()
+    protected function getVerifiedDomainsAllRequest(): Request
     {
 
         $resourcePath = '/verified-domains';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->setBodyParams2($httpBody, $headerParams, $queryParams, $resourcePath);
     }
 
     public function submitDomainVerification($domain_name, $body)
     {
-        $response = $this->submitDomainVerificationWithHttpInfo($domain_name, $body);
-        return $response;
+        return $this->submitDomainVerificationWithHttpInfo($domain_name, $body);
     }
 
     public function submitDomainVerificationWithHttpInfo($domain_name, $body)
     {
         $request = $this->submitDomainVerificationRequest($domain_name, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
-
-            return $content;
-
-        } catch (ApiException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
-    protected function submitDomainVerificationRequest($domain_name, $body)
+    protected function submitDomainVerificationRequest($domain_name, $body): Request
     {
         // verify the required parameter 'domain_name' is set
         if ($domain_name === null || (is_array($domain_name) && count($domain_name) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $domain_name when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/verified-domains/{domain_name}/actions/verify';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($domain_name !== null) {
-            $resourcePath = str_replace(
-                '{' . 'domain_name' . '}',
-                ObjectSerializer::toPathValue($domain_name),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'domain_name' . '}',
+            ObjectSerializer::toPathValue($domain_name),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        return $this->setBodyParams($body, $headerParams, $queryParams, $resourcePath);
+    }
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+    /**
+     * @param $body
+     * @param array $headerParams
+     * @param array $queryParams
+     * @param $resourcePath
+     * @return Request
+     */
+    protected function setBodyParams($body, array $headerParams, array $queryParams, $resourcePath): Request
+    {
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $body;
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
+        if ($headers['Content-Type'] === 'application/json') {
+            if ($httpBody instanceof stdClass) {
+                $httpBody = \GuzzleHttp\json_encode($httpBody);
             }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
+            if (is_array($httpBody)) {
+                $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
             }
         }
-
 
         // Basic Authentication
         if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
@@ -771,26 +346,86 @@ class VerifiedDomainsApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
     }
 
-    protected function createHttpClientOption()
+    /**
+     * @param Request $request
+     * @return mixed
+     */
+    protected function performRequest(Request $request)
     {
-        $options = [];
-        if ($this->config->getDebug()) {
-            $options[RequestOptions::DEBUG] = fopen($this->config->getDebugFile(), 'a');
-            if (!$options[RequestOptions::DEBUG]) {
-                throw new \RuntimeException('Failed to open the debug file: ' . $this->config->getDebugFile());
+        try {
+            $options = $this->createHttpClientOption();
+            $response = $this->client->send($request, $options);
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode < 200 || $statusCode > 299) {
+                throw new ApiException(
+                    sprintf(
+                        '[%d] Error connecting to the API (%s)',
+                        $statusCode,
+                        $request->getUri()
+                    ),
+                    $statusCode,
+                    $response->getHeaders(),
+                    $response->getBody()
+                );
             }
+
+            return json_decode($response->getBody()->getContents());
+
+        } catch (ApiException | GuzzleException $e) {
+            throw $e->getResponseBody();
+        }
+    }
+
+    /**
+     * @param $httpBody
+     * @param array $headerParams
+     * @param array $queryParams
+     * @param string $resourcePath
+     * @return Request
+     */
+    protected function setBodyParams2($httpBody, array $headerParams, array $queryParams, string $resourcePath): Request
+    {
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
+
+
+        // Basic Authentication
+        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
+            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
         }
 
-        if ($this->config->getTimeout()) {
-            $options[RequestOptions::TIMEOUT] = $this->config->getTimeout();
+        // OAuth Authentication
+        if (!empty($this->config->getAccessToken())) {
+            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
         }
 
-        return $options;
+        $defaultHeaders = [];
+        if ($this->config->getUserAgent()) {
+            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
+        }
+
+        $headers = array_merge(
+            $defaultHeaders,
+            $headerParams,
+            $headers
+        );
+
+        $query = Query::build($queryParams);
+        return new Request(
+            'GET',
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
+            $headers,
+            $httpBody
+        );
     }
 }

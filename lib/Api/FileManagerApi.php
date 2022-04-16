@@ -29,39 +29,17 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\RequestOptions;
+use InvalidArgumentException;
 use MailchimpMarketing\ApiException;
-use MailchimpMarketing\Configuration;
-use MailchimpMarketing\HeaderSelector;
+use MailchimpMarketing\ApiTrait;
 use MailchimpMarketing\ObjectSerializer;
+use stdClass;
 
 class FileManagerApi
 {
-    protected $client;
-    protected $config;
-    protected $headerSelector;
-
-    public function __construct(Configuration $config = null)
-    {
-        $this->client = new Client([
-            'defaults' => [
-                'timeout' => 120.0
-            ]
-        ]);
-        $this->headerSelector = new HeaderSelector();
-        $this->config = $config ?: new Configuration();
-    }
-
-    public function getConfig()
-    {
-        return $this->config;
-    }
+    use ApiTrait;
 
     public function deleteFile($file_id)
     {
@@ -74,11 +52,7 @@ class FileManagerApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -95,86 +69,39 @@ class FileManagerApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteFileRequest($file_id)
+    protected function deleteFileRequest($file_id): Request
     {
         // verify the required parameter 'file_id' is set
         if ($file_id === null || (is_array($file_id) && count($file_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $file_id when calling '
             );
         }
 
         $resourcePath = '/file-manager/files/{file_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($file_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'file_id' . '}',
-                ObjectSerializer::toPathValue($file_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'file_id' . '}',
+            ObjectSerializer::toPathValue($file_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -201,7 +128,7 @@ class FileManagerApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -218,11 +145,7 @@ class FileManagerApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -239,86 +162,39 @@ class FileManagerApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteFolderRequest($folder_id)
+    protected function deleteFolderRequest($folder_id): Request
     {
         // verify the required parameter 'folder_id' is set
         if ($folder_id === null || (is_array($folder_id) && count($folder_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $folder_id when calling '
             );
         }
 
         $resourcePath = '/file-manager/folders/{folder_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($folder_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'folder_id' . '}',
-                ObjectSerializer::toPathValue($folder_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'folder_id' . '}',
+            ObjectSerializer::toPathValue($folder_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -345,7 +221,7 @@ class FileManagerApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -353,8 +229,7 @@ class FileManagerApi
 
     public function files($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $type = null, $created_by = null, $before_created_at = null, $since_created_at = null, $sort_field = null, $sort_dir = null)
     {
-        $response = $this->filesWithHttpInfo($fields, $exclude_fields, $count, $offset, $type, $created_by, $before_created_at, $since_created_at, $sort_field, $sort_dir);
-        return $response;
+        return $this->filesWithHttpInfo($fields, $exclude_fields, $count, $offset, $type, $created_by, $before_created_at, $since_created_at, $sort_field, $sort_dir);
     }
 
     public function filesWithHttpInfo($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $type = null, $created_by = null, $before_created_at = null, $since_created_at = null, $sort_field = null, $sort_dir = null)
@@ -363,11 +238,7 @@ class FileManagerApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -384,30 +255,24 @@ class FileManagerApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function filesRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $type = null, $created_by = null, $before_created_at = null, $since_created_at = null, $sort_field = null, $sort_dir = null)
+    protected function filesRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $type = null, $created_by = null, $before_created_at = null, $since_created_at = null, $sort_field = null, $sort_dir = null): Request
     {
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling FileManagerApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling FileManagerApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/file-manager/files';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -457,49 +322,10 @@ class FileManagerApi
 
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -526,7 +352,7 @@ class FileManagerApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -534,8 +360,7 @@ class FileManagerApi
 
     public function getFile($file_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getFileWithHttpInfo($file_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getFileWithHttpInfo($file_id, $fields, $exclude_fields);
     }
 
     public function getFileWithHttpInfo($file_id, $fields = null, $exclude_fields = null)
@@ -544,11 +369,7 @@ class FileManagerApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -565,32 +386,26 @@ class FileManagerApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getFileRequest($file_id, $fields = null, $exclude_fields = null)
+    protected function getFileRequest($file_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'file_id' is set
         if ($file_id === null || (is_array($file_id) && count($file_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $file_id when calling '
             );
         }
 
         $resourcePath = '/file-manager/files/{file_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -607,58 +422,17 @@ class FileManagerApi
         }
 
         // path params
-        if ($file_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'file_id' . '}',
-                ObjectSerializer::toPathValue($file_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'file_id' . '}',
+            ObjectSerializer::toPathValue($file_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -685,7 +459,7 @@ class FileManagerApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -693,8 +467,7 @@ class FileManagerApi
 
     public function listFolders($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $created_by = null, $before_created_at = null, $since_created_at = null)
     {
-        $response = $this->listFoldersWithHttpInfo($fields, $exclude_fields, $count, $offset, $created_by, $before_created_at, $since_created_at);
-        return $response;
+        return $this->listFoldersWithHttpInfo($fields, $exclude_fields, $count, $offset, $created_by, $before_created_at, $since_created_at);
     }
 
     public function listFoldersWithHttpInfo($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $created_by = null, $before_created_at = null, $since_created_at = null)
@@ -703,11 +476,7 @@ class FileManagerApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -724,30 +493,24 @@ class FileManagerApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function listFoldersRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $created_by = null, $before_created_at = null, $since_created_at = null)
+    protected function listFoldersRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $created_by = null, $before_created_at = null, $since_created_at = null): Request
     {
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling FileManagerApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling FileManagerApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/file-manager/folders';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -785,49 +548,10 @@ class FileManagerApi
 
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -854,7 +578,7 @@ class FileManagerApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -862,8 +586,7 @@ class FileManagerApi
 
     public function getFolder($folder_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getFolderWithHttpInfo($folder_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getFolderWithHttpInfo($folder_id, $fields, $exclude_fields);
     }
 
     public function getFolderWithHttpInfo($folder_id, $fields = null, $exclude_fields = null)
@@ -872,11 +595,7 @@ class FileManagerApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -893,32 +612,26 @@ class FileManagerApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getFolderRequest($folder_id, $fields = null, $exclude_fields = null)
+    protected function getFolderRequest($folder_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'folder_id' is set
         if ($folder_id === null || (is_array($folder_id) && count($folder_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $folder_id when calling '
             );
         }
 
         $resourcePath = '/file-manager/folders/{folder_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -935,58 +648,17 @@ class FileManagerApi
         }
 
         // path params
-        if ($folder_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'folder_id' . '}',
-                ObjectSerializer::toPathValue($folder_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'folder_id' . '}',
+            ObjectSerializer::toPathValue($folder_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -1013,7 +685,7 @@ class FileManagerApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1021,8 +693,7 @@ class FileManagerApi
 
     public function updateFile($file_id, $body)
     {
-        $response = $this->updateFileWithHttpInfo($file_id, $body);
-        return $response;
+        return $this->updateFileWithHttpInfo($file_id, $body);
     }
 
     public function updateFileWithHttpInfo($file_id, $body)
@@ -1031,11 +702,7 @@ class FileManagerApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1052,93 +719,59 @@ class FileManagerApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateFileRequest($file_id, $body)
+    protected function updateFileRequest($file_id, $body): Request
     {
         // verify the required parameter 'file_id' is set
         if ($file_id === null || (is_array($file_id) && count($file_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $file_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/file-manager/files/{file_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($file_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'file_id' . '}',
-                ObjectSerializer::toPathValue($file_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'file_id' . '}',
+            ObjectSerializer::toPathValue($file_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -1167,7 +800,7 @@ class FileManagerApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1175,8 +808,7 @@ class FileManagerApi
 
     public function updateFolder($folder_id, $body)
     {
-        $response = $this->updateFolderWithHttpInfo($folder_id, $body);
-        return $response;
+        return $this->updateFolderWithHttpInfo($folder_id, $body);
     }
 
     public function updateFolderWithHttpInfo($folder_id, $body)
@@ -1185,11 +817,7 @@ class FileManagerApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1206,93 +834,59 @@ class FileManagerApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateFolderRequest($folder_id, $body)
+    protected function updateFolderRequest($folder_id, $body): Request
     {
         // verify the required parameter 'folder_id' is set
         if ($folder_id === null || (is_array($folder_id) && count($folder_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $folder_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/file-manager/folders/{folder_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($folder_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'folder_id' . '}',
-                ObjectSerializer::toPathValue($folder_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'folder_id' . '}',
+            ObjectSerializer::toPathValue($folder_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -1321,7 +915,7 @@ class FileManagerApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1329,8 +923,7 @@ class FileManagerApi
 
     public function upload($body)
     {
-        $response = $this->uploadWithHttpInfo($body);
-        return $response;
+        return $this->uploadWithHttpInfo($body);
     }
 
     public function uploadWithHttpInfo($body)
@@ -1339,11 +932,7 @@ class FileManagerApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1360,79 +949,47 @@ class FileManagerApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function uploadRequest($body)
+    protected function uploadRequest($body): Request
     {
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/file-manager/files';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -1461,7 +1018,7 @@ class FileManagerApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1469,8 +1026,7 @@ class FileManagerApi
 
     public function createFolder($body)
     {
-        $response = $this->createFolderWithHttpInfo($body);
-        return $response;
+        return $this->createFolderWithHttpInfo($body);
     }
 
     public function createFolderWithHttpInfo($body)
@@ -1479,11 +1035,7 @@ class FileManagerApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1500,79 +1052,47 @@ class FileManagerApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function createFolderRequest($body)
+    protected function createFolderRequest($body): Request
     {
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/file-manager/folders';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -1601,26 +1121,9 @@ class FileManagerApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
-    }
-
-    protected function createHttpClientOption()
-    {
-        $options = [];
-        if ($this->config->getDebug()) {
-            $options[RequestOptions::DEBUG] = fopen($this->config->getDebugFile(), 'a');
-            if (!$options[RequestOptions::DEBUG]) {
-                throw new \RuntimeException('Failed to open the debug file: ' . $this->config->getDebugFile());
-            }
-        }
-
-        if ($this->config->getTimeout()) {
-            $options[RequestOptions::TIMEOUT] = $this->config->getTimeout();
-        }
-
-        return $options;
     }
 }

@@ -29,44 +29,21 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\RequestOptions;
+use InvalidArgumentException;
 use MailchimpMarketing\ApiException;
-use MailchimpMarketing\Configuration;
-use MailchimpMarketing\HeaderSelector;
+use MailchimpMarketing\ApiTrait;
 use MailchimpMarketing\ObjectSerializer;
+use stdClass;
 
 class EcommerceApi
 {
-    protected $client;
-    protected $config;
-    protected $headerSelector;
-
-    public function __construct(Configuration $config = null)
-    {
-        $this->client = new Client([
-            'defaults' => [
-                'timeout' => 120.0
-            ]
-        ]);
-        $this->headerSelector = new HeaderSelector();
-        $this->config = $config ?: new Configuration();
-    }
-
-    public function getConfig()
-    {
-        return $this->config;
-    }
+    use ApiTrait;
 
     public function deleteStore($store_id)
     {
-        $response = $this->deleteStoreWithHttpInfo($store_id);
-        return $response;
+        return $this->deleteStoreWithHttpInfo($store_id);
     }
 
     public function deleteStoreWithHttpInfo($store_id)
@@ -75,11 +52,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -96,32 +69,26 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteStoreRequest($store_id)
+    protected function deleteStoreRequest($store_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
         if ($store_id !== null) {
@@ -133,49 +100,10 @@ class EcommerceApi
         }
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -202,7 +130,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -219,11 +147,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -240,100 +164,51 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteStoreCartRequest($store_id, $cart_id)
+    protected function deleteStoreCartRequest($store_id, $cart_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'cart_id' is set
         if ($cart_id === null || (is_array($cart_id) && count($cart_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $cart_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/carts/{cart_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($cart_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'cart_id' . '}',
-                ObjectSerializer::toPathValue($cart_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'cart_id' . '}',
+            ObjectSerializer::toPathValue($cart_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -360,7 +235,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -377,11 +252,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -398,114 +269,63 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteCartLineItemRequest($store_id, $cart_id, $line_id)
+    protected function deleteCartLineItemRequest($store_id, $cart_id, $line_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'cart_id' is set
         if ($cart_id === null || (is_array($cart_id) && count($cart_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $cart_id when calling '
             );
         }
         // verify the required parameter 'line_id' is set
         if ($line_id === null || (is_array($line_id) && count($line_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $line_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/carts/{cart_id}/lines/{line_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($cart_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'cart_id' . '}',
-                ObjectSerializer::toPathValue($cart_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'cart_id' . '}',
+            ObjectSerializer::toPathValue($cart_id),
+            $resourcePath
+        );
         // path params
-        if ($line_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'line_id' . '}',
-                ObjectSerializer::toPathValue($line_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'line_id' . '}',
+            ObjectSerializer::toPathValue($line_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -532,7 +352,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -549,11 +369,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -570,100 +386,51 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteStoreCustomerRequest($store_id, $customer_id)
+    protected function deleteStoreCustomerRequest($store_id, $customer_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'customer_id' is set
         if ($customer_id === null || (is_array($customer_id) && count($customer_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $customer_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/customers/{customer_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($customer_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'customer_id' . '}',
-                ObjectSerializer::toPathValue($customer_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'customer_id' . '}',
+            ObjectSerializer::toPathValue($customer_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -690,7 +457,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -707,11 +474,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -728,100 +491,51 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteOrderRequest($store_id, $order_id)
+    protected function deleteOrderRequest($store_id, $order_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'order_id' is set
         if ($order_id === null || (is_array($order_id) && count($order_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $order_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/orders/{order_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($order_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'order_id' . '}',
-                ObjectSerializer::toPathValue($order_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'order_id' . '}',
+            ObjectSerializer::toPathValue($order_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -848,7 +562,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -865,11 +579,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -886,114 +596,63 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteOrderLineItemRequest($store_id, $order_id, $line_id)
+    protected function deleteOrderLineItemRequest($store_id, $order_id, $line_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'order_id' is set
         if ($order_id === null || (is_array($order_id) && count($order_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $order_id when calling '
             );
         }
         // verify the required parameter 'line_id' is set
         if ($line_id === null || (is_array($line_id) && count($line_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $line_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/orders/{order_id}/lines/{line_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($order_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'order_id' . '}',
-                ObjectSerializer::toPathValue($order_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'order_id' . '}',
+            ObjectSerializer::toPathValue($order_id),
+            $resourcePath
+        );
         // path params
-        if ($line_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'line_id' . '}',
-                ObjectSerializer::toPathValue($line_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'line_id' . '}',
+            ObjectSerializer::toPathValue($line_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -1020,7 +679,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1037,11 +696,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1058,100 +713,51 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteStoreProductRequest($store_id, $product_id)
+    protected function deleteStoreProductRequest($store_id, $product_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -1178,7 +784,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1195,11 +801,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1216,114 +818,63 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteProductImageRequest($store_id, $product_id, $image_id)
+    protected function deleteProductImageRequest($store_id, $product_id, $image_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         // verify the required parameter 'image_id' is set
         if ($image_id === null || (is_array($image_id) && count($image_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $image_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/images/{image_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
         // path params
-        if ($image_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'image_id' . '}',
-                ObjectSerializer::toPathValue($image_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'image_id' . '}',
+            ObjectSerializer::toPathValue($image_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -1350,7 +901,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1367,11 +918,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1388,114 +935,63 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deleteProductVariantRequest($store_id, $product_id, $variant_id)
+    protected function deleteProductVariantRequest($store_id, $product_id, $variant_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         // verify the required parameter 'variant_id' is set
         if ($variant_id === null || (is_array($variant_id) && count($variant_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $variant_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/variants/{variant_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
         // path params
-        if ($variant_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'variant_id' . '}',
-                ObjectSerializer::toPathValue($variant_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'variant_id' . '}',
+            ObjectSerializer::toPathValue($variant_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -1522,7 +1018,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1539,11 +1035,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1560,114 +1052,63 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deletePromoCodeRequest($store_id, $promo_rule_id, $promo_code_id)
+    protected function deletePromoCodeRequest($store_id, $promo_rule_id, $promo_code_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'promo_rule_id' is set
         if ($promo_rule_id === null || (is_array($promo_rule_id) && count($promo_rule_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_rule_id when calling '
             );
         }
         // verify the required parameter 'promo_code_id' is set
         if ($promo_code_id === null || (is_array($promo_code_id) && count($promo_code_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_code_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/promo-rules/{promo_rule_id}/promo-codes/{promo_code_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($promo_rule_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_rule_id' . '}',
-                ObjectSerializer::toPathValue($promo_rule_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_rule_id' . '}',
+            ObjectSerializer::toPathValue($promo_rule_id),
+            $resourcePath
+        );
         // path params
-        if ($promo_code_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_code_id' . '}',
-                ObjectSerializer::toPathValue($promo_code_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_code_id' . '}',
+            ObjectSerializer::toPathValue($promo_code_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -1694,7 +1135,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1711,11 +1152,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1732,100 +1169,51 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function deletePromoRuleRequest($store_id, $promo_rule_id)
+    protected function deletePromoRuleRequest($store_id, $promo_rule_id): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'promo_rule_id' is set
         if ($promo_rule_id === null || (is_array($promo_rule_id) && count($promo_rule_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_rule_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/promo-rules/{promo_rule_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($promo_rule_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_rule_id' . '}',
-                ObjectSerializer::toPathValue($promo_rule_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_rule_id' . '}',
+            ObjectSerializer::toPathValue($promo_rule_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -1852,7 +1240,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -1860,8 +1248,7 @@ class EcommerceApi
 
     public function orders($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $campaign_id = null, $outreach_id = null, $customer_id = null, $has_outreach = null)
     {
-        $response = $this->ordersWithHttpInfo($fields, $exclude_fields, $count, $offset, $campaign_id, $outreach_id, $customer_id, $has_outreach);
-        return $response;
+        return $this->ordersWithHttpInfo($fields, $exclude_fields, $count, $offset, $campaign_id, $outreach_id, $customer_id, $has_outreach);
     }
 
     public function ordersWithHttpInfo($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $campaign_id = null, $outreach_id = null, $customer_id = null, $has_outreach = null)
@@ -1870,11 +1257,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -1891,30 +1274,24 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function ordersRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $campaign_id = null, $outreach_id = null, $customer_id = null, $has_outreach = null)
+    protected function ordersRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $campaign_id = null, $outreach_id = null, $customer_id = null, $has_outreach = null): Request
     {
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/orders';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -1956,49 +1333,10 @@ class EcommerceApi
 
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -2025,7 +1363,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -2033,8 +1371,7 @@ class EcommerceApi
 
     public function stores($fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->storesWithHttpInfo($fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->storesWithHttpInfo($fields, $exclude_fields, $count, $offset);
     }
 
     public function storesWithHttpInfo($fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -2043,11 +1380,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -2064,30 +1397,24 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function storesRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0')
+    protected function storesRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -2113,49 +1440,10 @@ class EcommerceApi
 
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -2182,7 +1470,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -2190,8 +1478,7 @@ class EcommerceApi
 
     public function getStore($store_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getStoreWithHttpInfo($store_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getStoreWithHttpInfo($store_id, $fields, $exclude_fields);
     }
 
     public function getStoreWithHttpInfo($store_id, $fields = null, $exclude_fields = null)
@@ -2200,11 +1487,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -2221,32 +1504,26 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getStoreRequest($store_id, $fields = null, $exclude_fields = null)
+    protected function getStoreRequest($store_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -2263,58 +1540,17 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -2341,7 +1577,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -2349,8 +1585,7 @@ class EcommerceApi
 
     public function getStoreCarts($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->getStoreCartsWithHttpInfo($store_id, $fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->getStoreCartsWithHttpInfo($store_id, $fields, $exclude_fields, $count, $offset);
     }
 
     public function getStoreCartsWithHttpInfo($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -2359,11 +1594,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -2380,36 +1611,30 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getStoreCartsRequest($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
+    protected function getStoreCartsRequest($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores/{store_id}/carts';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -2434,58 +1659,17 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -2512,7 +1696,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -2520,8 +1704,7 @@ class EcommerceApi
 
     public function getStoreCart($store_id, $cart_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getStoreCartWithHttpInfo($store_id, $cart_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getStoreCartWithHttpInfo($store_id, $cart_id, $fields, $exclude_fields);
     }
 
     public function getStoreCartWithHttpInfo($store_id, $cart_id, $fields = null, $exclude_fields = null)
@@ -2530,11 +1713,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -2551,38 +1730,32 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getStoreCartRequest($store_id, $cart_id, $fields = null, $exclude_fields = null)
+    protected function getStoreCartRequest($store_id, $cart_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'cart_id' is set
         if ($cart_id === null || (is_array($cart_id) && count($cart_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $cart_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/carts/{cart_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -2599,66 +1772,23 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($cart_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'cart_id' . '}',
-                ObjectSerializer::toPathValue($cart_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'cart_id' . '}',
+            ObjectSerializer::toPathValue($cart_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -2685,7 +1815,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -2693,8 +1823,7 @@ class EcommerceApi
 
     public function getAllCartLineItems($store_id, $cart_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->getAllCartLineItemsWithHttpInfo($store_id, $cart_id, $fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->getAllCartLineItemsWithHttpInfo($store_id, $cart_id, $fields, $exclude_fields, $count, $offset);
     }
 
     public function getAllCartLineItemsWithHttpInfo($store_id, $cart_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -2703,11 +1832,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -2724,42 +1849,36 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getAllCartLineItemsRequest($store_id, $cart_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
+    protected function getAllCartLineItemsRequest($store_id, $cart_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'cart_id' is set
         if ($cart_id === null || (is_array($cart_id) && count($cart_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $cart_id when calling '
             );
         }
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores/{store_id}/carts/{cart_id}/lines';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -2784,66 +1903,23 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($cart_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'cart_id' . '}',
-                ObjectSerializer::toPathValue($cart_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'cart_id' . '}',
+            ObjectSerializer::toPathValue($cart_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -2870,7 +1946,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -2878,8 +1954,7 @@ class EcommerceApi
 
     public function getCartLineItem($store_id, $cart_id, $line_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getCartLineItemWithHttpInfo($store_id, $cart_id, $line_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getCartLineItemWithHttpInfo($store_id, $cart_id, $line_id, $fields, $exclude_fields);
     }
 
     public function getCartLineItemWithHttpInfo($store_id, $cart_id, $line_id, $fields = null, $exclude_fields = null)
@@ -2888,11 +1963,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -2909,44 +1980,38 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getCartLineItemRequest($store_id, $cart_id, $line_id, $fields = null, $exclude_fields = null)
+    protected function getCartLineItemRequest($store_id, $cart_id, $line_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'cart_id' is set
         if ($cart_id === null || (is_array($cart_id) && count($cart_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $cart_id when calling '
             );
         }
         // verify the required parameter 'line_id' is set
         if ($line_id === null || (is_array($line_id) && count($line_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $line_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/carts/{cart_id}/lines/{line_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -2963,74 +2028,29 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($cart_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'cart_id' . '}',
-                ObjectSerializer::toPathValue($cart_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'cart_id' . '}',
+            ObjectSerializer::toPathValue($cart_id),
+            $resourcePath
+        );
         // path params
-        if ($line_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'line_id' . '}',
-                ObjectSerializer::toPathValue($line_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'line_id' . '}',
+            ObjectSerializer::toPathValue($line_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -3057,7 +2077,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -3065,8 +2085,7 @@ class EcommerceApi
 
     public function getAllStoreCustomers($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $email_address = null)
     {
-        $response = $this->getAllStoreCustomersWithHttpInfo($store_id, $fields, $exclude_fields, $count, $offset, $email_address);
-        return $response;
+        return $this->getAllStoreCustomersWithHttpInfo($store_id, $fields, $exclude_fields, $count, $offset, $email_address);
     }
 
     public function getAllStoreCustomersWithHttpInfo($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $email_address = null)
@@ -3075,11 +2094,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -3096,36 +2111,30 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getAllStoreCustomersRequest($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $email_address = null)
+    protected function getAllStoreCustomersRequest($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $email_address = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores/{store_id}/customers';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -3154,58 +2163,17 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -3232,7 +2200,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -3240,8 +2208,7 @@ class EcommerceApi
 
     public function getStoreCustomer($store_id, $customer_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getStoreCustomerWithHttpInfo($store_id, $customer_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getStoreCustomerWithHttpInfo($store_id, $customer_id, $fields, $exclude_fields);
     }
 
     public function getStoreCustomerWithHttpInfo($store_id, $customer_id, $fields = null, $exclude_fields = null)
@@ -3250,11 +2217,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -3271,38 +2234,32 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getStoreCustomerRequest($store_id, $customer_id, $fields = null, $exclude_fields = null)
+    protected function getStoreCustomerRequest($store_id, $customer_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'customer_id' is set
         if ($customer_id === null || (is_array($customer_id) && count($customer_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $customer_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/customers/{customer_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -3319,66 +2276,23 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($customer_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'customer_id' . '}',
-                ObjectSerializer::toPathValue($customer_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'customer_id' . '}',
+            ObjectSerializer::toPathValue($customer_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -3405,7 +2319,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -3413,8 +2327,7 @@ class EcommerceApi
 
     public function getStoreOrders($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $customer_id = null, $has_outreach = null, $campaign_id = null, $outreach_id = null)
     {
-        $response = $this->getStoreOrdersWithHttpInfo($store_id, $fields, $exclude_fields, $count, $offset, $customer_id, $has_outreach, $campaign_id, $outreach_id);
-        return $response;
+        return $this->getStoreOrdersWithHttpInfo($store_id, $fields, $exclude_fields, $count, $offset, $customer_id, $has_outreach, $campaign_id, $outreach_id);
     }
 
     public function getStoreOrdersWithHttpInfo($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $customer_id = null, $has_outreach = null, $campaign_id = null, $outreach_id = null)
@@ -3423,11 +2336,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -3444,36 +2353,30 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getStoreOrdersRequest($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $customer_id = null, $has_outreach = null, $campaign_id = null, $outreach_id = null)
+    protected function getStoreOrdersRequest($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $customer_id = null, $has_outreach = null, $campaign_id = null, $outreach_id = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores/{store_id}/orders';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -3514,58 +2417,17 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -3592,7 +2454,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -3600,8 +2462,7 @@ class EcommerceApi
 
     public function getOrder($store_id, $order_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getOrderWithHttpInfo($store_id, $order_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getOrderWithHttpInfo($store_id, $order_id, $fields, $exclude_fields);
     }
 
     public function getOrderWithHttpInfo($store_id, $order_id, $fields = null, $exclude_fields = null)
@@ -3610,11 +2471,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -3631,38 +2488,32 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getOrderRequest($store_id, $order_id, $fields = null, $exclude_fields = null)
+    protected function getOrderRequest($store_id, $order_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'order_id' is set
         if ($order_id === null || (is_array($order_id) && count($order_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $order_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/orders/{order_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -3679,66 +2530,23 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($order_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'order_id' . '}',
-                ObjectSerializer::toPathValue($order_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'order_id' . '}',
+            ObjectSerializer::toPathValue($order_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -3765,7 +2573,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -3773,8 +2581,7 @@ class EcommerceApi
 
     public function getAllOrderLineItems($store_id, $order_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->getAllOrderLineItemsWithHttpInfo($store_id, $order_id, $fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->getAllOrderLineItemsWithHttpInfo($store_id, $order_id, $fields, $exclude_fields, $count, $offset);
     }
 
     public function getAllOrderLineItemsWithHttpInfo($store_id, $order_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -3783,11 +2590,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -3804,42 +2607,36 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getAllOrderLineItemsRequest($store_id, $order_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
+    protected function getAllOrderLineItemsRequest($store_id, $order_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'order_id' is set
         if ($order_id === null || (is_array($order_id) && count($order_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $order_id when calling '
             );
         }
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores/{store_id}/orders/{order_id}/lines';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -3864,66 +2661,23 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($order_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'order_id' . '}',
-                ObjectSerializer::toPathValue($order_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'order_id' . '}',
+            ObjectSerializer::toPathValue($order_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -3950,7 +2704,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -3958,8 +2712,7 @@ class EcommerceApi
 
     public function getOrderLineItem($store_id, $order_id, $line_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getOrderLineItemWithHttpInfo($store_id, $order_id, $line_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getOrderLineItemWithHttpInfo($store_id, $order_id, $line_id, $fields, $exclude_fields);
     }
 
     public function getOrderLineItemWithHttpInfo($store_id, $order_id, $line_id, $fields = null, $exclude_fields = null)
@@ -3968,11 +2721,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -3989,44 +2738,38 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getOrderLineItemRequest($store_id, $order_id, $line_id, $fields = null, $exclude_fields = null)
+    protected function getOrderLineItemRequest($store_id, $order_id, $line_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'order_id' is set
         if ($order_id === null || (is_array($order_id) && count($order_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $order_id when calling '
             );
         }
         // verify the required parameter 'line_id' is set
         if ($line_id === null || (is_array($line_id) && count($line_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $line_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/orders/{order_id}/lines/{line_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -4043,74 +2786,29 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($order_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'order_id' . '}',
-                ObjectSerializer::toPathValue($order_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'order_id' . '}',
+            ObjectSerializer::toPathValue($order_id),
+            $resourcePath
+        );
         // path params
-        if ($line_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'line_id' . '}',
-                ObjectSerializer::toPathValue($line_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'line_id' . '}',
+            ObjectSerializer::toPathValue($line_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -4137,7 +2835,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -4145,8 +2843,7 @@ class EcommerceApi
 
     public function getAllStoreProducts($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->getAllStoreProductsWithHttpInfo($store_id, $fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->getAllStoreProductsWithHttpInfo($store_id, $fields, $exclude_fields, $count, $offset);
     }
 
     public function getAllStoreProductsWithHttpInfo($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -4155,11 +2852,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -4176,36 +2869,30 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getAllStoreProductsRequest($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
+    protected function getAllStoreProductsRequest($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores/{store_id}/products';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -4230,58 +2917,17 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -4308,7 +2954,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -4316,8 +2962,7 @@ class EcommerceApi
 
     public function getStoreProduct($store_id, $product_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getStoreProductWithHttpInfo($store_id, $product_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getStoreProductWithHttpInfo($store_id, $product_id, $fields, $exclude_fields);
     }
 
     public function getStoreProductWithHttpInfo($store_id, $product_id, $fields = null, $exclude_fields = null)
@@ -4326,11 +2971,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -4347,38 +2988,32 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getStoreProductRequest($store_id, $product_id, $fields = null, $exclude_fields = null)
+    protected function getStoreProductRequest($store_id, $product_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -4395,66 +3030,23 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -4481,7 +3073,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -4489,8 +3081,7 @@ class EcommerceApi
 
     public function getProductImages($store_id, $product_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->getProductImagesWithHttpInfo($store_id, $product_id, $fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->getProductImagesWithHttpInfo($store_id, $product_id, $fields, $exclude_fields, $count, $offset);
     }
 
     public function getProductImagesWithHttpInfo($store_id, $product_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -4499,11 +3090,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -4520,42 +3107,36 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getProductImagesRequest($store_id, $product_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
+    protected function getProductImagesRequest($store_id, $product_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/images';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -4580,66 +3161,23 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -4666,7 +3204,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -4674,8 +3212,7 @@ class EcommerceApi
 
     public function getProductImage($store_id, $product_id, $image_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getProductImageWithHttpInfo($store_id, $product_id, $image_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getProductImageWithHttpInfo($store_id, $product_id, $image_id, $fields, $exclude_fields);
     }
 
     public function getProductImageWithHttpInfo($store_id, $product_id, $image_id, $fields = null, $exclude_fields = null)
@@ -4684,11 +3221,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -4705,44 +3238,38 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getProductImageRequest($store_id, $product_id, $image_id, $fields = null, $exclude_fields = null)
+    protected function getProductImageRequest($store_id, $product_id, $image_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         // verify the required parameter 'image_id' is set
         if ($image_id === null || (is_array($image_id) && count($image_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $image_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/images/{image_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -4759,74 +3286,29 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
         // path params
-        if ($image_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'image_id' . '}',
-                ObjectSerializer::toPathValue($image_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'image_id' . '}',
+            ObjectSerializer::toPathValue($image_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -4853,7 +3335,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -4861,8 +3343,7 @@ class EcommerceApi
 
     public function getProductVariants($store_id, $product_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->getProductVariantsWithHttpInfo($store_id, $product_id, $fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->getProductVariantsWithHttpInfo($store_id, $product_id, $fields, $exclude_fields, $count, $offset);
     }
 
     public function getProductVariantsWithHttpInfo($store_id, $product_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -4871,11 +3352,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -4892,42 +3369,36 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getProductVariantsRequest($store_id, $product_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
+    protected function getProductVariantsRequest($store_id, $product_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/variants';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -4952,66 +3423,23 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -5038,7 +3466,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -5046,8 +3474,7 @@ class EcommerceApi
 
     public function getProductVariant($store_id, $product_id, $variant_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getProductVariantWithHttpInfo($store_id, $product_id, $variant_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getProductVariantWithHttpInfo($store_id, $product_id, $variant_id, $fields, $exclude_fields);
     }
 
     public function getProductVariantWithHttpInfo($store_id, $product_id, $variant_id, $fields = null, $exclude_fields = null)
@@ -5056,11 +3483,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -5077,44 +3500,38 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getProductVariantRequest($store_id, $product_id, $variant_id, $fields = null, $exclude_fields = null)
+    protected function getProductVariantRequest($store_id, $product_id, $variant_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         // verify the required parameter 'variant_id' is set
         if ($variant_id === null || (is_array($variant_id) && count($variant_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $variant_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/variants/{variant_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -5131,74 +3548,29 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
         // path params
-        if ($variant_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'variant_id' . '}',
-                ObjectSerializer::toPathValue($variant_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'variant_id' . '}',
+            ObjectSerializer::toPathValue($variant_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -5225,7 +3597,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -5233,8 +3605,7 @@ class EcommerceApi
 
     public function getPromoCodes($promo_rule_id, $store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->getPromoCodesWithHttpInfo($promo_rule_id, $store_id, $fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->getPromoCodesWithHttpInfo($promo_rule_id, $store_id, $fields, $exclude_fields, $count, $offset);
     }
 
     public function getPromoCodesWithHttpInfo($promo_rule_id, $store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -5243,11 +3614,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -5264,42 +3631,36 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getPromoCodesRequest($promo_rule_id, $store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
+    protected function getPromoCodesRequest($promo_rule_id, $store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'promo_rule_id' is set
         if ($promo_rule_id === null || (is_array($promo_rule_id) && count($promo_rule_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_rule_id when calling '
             );
         }
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores/{store_id}/promo-rules/{promo_rule_id}/promo-codes';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -5324,66 +3685,23 @@ class EcommerceApi
         }
 
         // path params
-        if ($promo_rule_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_rule_id' . '}',
-                ObjectSerializer::toPathValue($promo_rule_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_rule_id' . '}',
+            ObjectSerializer::toPathValue($promo_rule_id),
+            $resourcePath
+        );
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -5410,7 +3728,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -5418,8 +3736,7 @@ class EcommerceApi
 
     public function getPromoCode($store_id, $promo_rule_id, $promo_code_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getPromoCodeWithHttpInfo($store_id, $promo_rule_id, $promo_code_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getPromoCodeWithHttpInfo($store_id, $promo_rule_id, $promo_code_id, $fields, $exclude_fields);
     }
 
     public function getPromoCodeWithHttpInfo($store_id, $promo_rule_id, $promo_code_id, $fields = null, $exclude_fields = null)
@@ -5428,11 +3745,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -5449,44 +3762,38 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getPromoCodeRequest($store_id, $promo_rule_id, $promo_code_id, $fields = null, $exclude_fields = null)
+    protected function getPromoCodeRequest($store_id, $promo_rule_id, $promo_code_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'promo_rule_id' is set
         if ($promo_rule_id === null || (is_array($promo_rule_id) && count($promo_rule_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_rule_id when calling '
             );
         }
         // verify the required parameter 'promo_code_id' is set
         if ($promo_code_id === null || (is_array($promo_code_id) && count($promo_code_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_code_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/promo-rules/{promo_rule_id}/promo-codes/{promo_code_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -5503,74 +3810,29 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($promo_rule_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_rule_id' . '}',
-                ObjectSerializer::toPathValue($promo_rule_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_rule_id' . '}',
+            ObjectSerializer::toPathValue($promo_rule_id),
+            $resourcePath
+        );
         // path params
-        if ($promo_code_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_code_id' . '}',
-                ObjectSerializer::toPathValue($promo_code_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_code_id' . '}',
+            ObjectSerializer::toPathValue($promo_code_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -5597,7 +3859,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -5605,8 +3867,7 @@ class EcommerceApi
 
     public function listPromoRules($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->listPromoRulesWithHttpInfo($store_id, $fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->listPromoRulesWithHttpInfo($store_id, $fields, $exclude_fields, $count, $offset);
     }
 
     public function listPromoRulesWithHttpInfo($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -5615,11 +3876,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -5636,36 +3893,30 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function listPromoRulesRequest($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
+    protected function listPromoRulesRequest($store_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         if ($count !== null && $count > 1000) {
-            throw new \InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
+            throw new InvalidArgumentException('invalid value for "$count" when calling EcommerceApi., must be smaller than or equal to 1000.');
         }
 
 
         $resourcePath = '/ecommerce/stores/{store_id}/promo-rules';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -5690,58 +3941,17 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -5768,7 +3978,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -5776,8 +3986,7 @@ class EcommerceApi
 
     public function getPromoRule($store_id, $promo_rule_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getPromoRuleWithHttpInfo($store_id, $promo_rule_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getPromoRuleWithHttpInfo($store_id, $promo_rule_id, $fields, $exclude_fields);
     }
 
     public function getPromoRuleWithHttpInfo($store_id, $promo_rule_id, $fields = null, $exclude_fields = null)
@@ -5786,11 +3995,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -5807,38 +4012,32 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function getPromoRuleRequest($store_id, $promo_rule_id, $fields = null, $exclude_fields = null)
+    protected function getPromoRuleRequest($store_id, $promo_rule_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'promo_rule_id' is set
         if ($promo_rule_id === null || (is_array($promo_rule_id) && count($promo_rule_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_rule_id when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/promo-rules/{promo_rule_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
         // query params
         if (is_array($fields)) {
             $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
@@ -5855,66 +4054,23 @@ class EcommerceApi
         }
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($promo_rule_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_rule_id' . '}',
-                ObjectSerializer::toPathValue($promo_rule_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_rule_id' . '}',
+            ObjectSerializer::toPathValue($promo_rule_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
-
-        // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
-
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
-            }
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
 
         // Basic Authentication
@@ -5941,7 +4097,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -5949,8 +4105,7 @@ class EcommerceApi
 
     public function updateStore($store_id, $body)
     {
-        $response = $this->updateStoreWithHttpInfo($store_id, $body);
-        return $response;
+        return $this->updateStoreWithHttpInfo($store_id, $body);
     }
 
     public function updateStoreWithHttpInfo($store_id, $body)
@@ -5959,11 +4114,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -5980,93 +4131,59 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateStoreRequest($store_id, $body)
+    protected function updateStoreRequest($store_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -6095,7 +4212,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -6103,8 +4220,7 @@ class EcommerceApi
 
     public function updateStoreCart($store_id, $cart_id, $body)
     {
-        $response = $this->updateStoreCartWithHttpInfo($store_id, $cart_id, $body);
-        return $response;
+        return $this->updateStoreCartWithHttpInfo($store_id, $cart_id, $body);
     }
 
     public function updateStoreCartWithHttpInfo($store_id, $cart_id, $body)
@@ -6113,11 +4229,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -6134,107 +4246,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateStoreCartRequest($store_id, $cart_id, $body)
+    protected function updateStoreCartRequest($store_id, $cart_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'cart_id' is set
         if ($cart_id === null || (is_array($cart_id) && count($cart_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $cart_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/carts/{cart_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($cart_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'cart_id' . '}',
-                ObjectSerializer::toPathValue($cart_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'cart_id' . '}',
+            ObjectSerializer::toPathValue($cart_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -6263,7 +4339,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -6271,8 +4347,7 @@ class EcommerceApi
 
     public function updateCartLineItem($store_id, $cart_id, $line_id, $body)
     {
-        $response = $this->updateCartLineItemWithHttpInfo($store_id, $cart_id, $line_id, $body);
-        return $response;
+        return $this->updateCartLineItemWithHttpInfo($store_id, $cart_id, $line_id, $body);
     }
 
     public function updateCartLineItemWithHttpInfo($store_id, $cart_id, $line_id, $body)
@@ -6281,11 +4356,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -6302,121 +4373,83 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateCartLineItemRequest($store_id, $cart_id, $line_id, $body)
+    protected function updateCartLineItemRequest($store_id, $cart_id, $line_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'cart_id' is set
         if ($cart_id === null || (is_array($cart_id) && count($cart_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $cart_id when calling '
             );
         }
         // verify the required parameter 'line_id' is set
         if ($line_id === null || (is_array($line_id) && count($line_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $line_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/carts/{cart_id}/lines/{line_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($cart_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'cart_id' . '}',
-                ObjectSerializer::toPathValue($cart_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'cart_id' . '}',
+            ObjectSerializer::toPathValue($cart_id),
+            $resourcePath
+        );
         // path params
-        if ($line_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'line_id' . '}',
-                ObjectSerializer::toPathValue($line_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'line_id' . '}',
+            ObjectSerializer::toPathValue($line_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -6445,7 +4478,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -6453,8 +4486,7 @@ class EcommerceApi
 
     public function updateStoreCustomer($store_id, $customer_id, $body)
     {
-        $response = $this->updateStoreCustomerWithHttpInfo($store_id, $customer_id, $body);
-        return $response;
+        return $this->updateStoreCustomerWithHttpInfo($store_id, $customer_id, $body);
     }
 
     public function updateStoreCustomerWithHttpInfo($store_id, $customer_id, $body)
@@ -6463,11 +4495,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -6484,107 +4512,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateStoreCustomerRequest($store_id, $customer_id, $body)
+    protected function updateStoreCustomerRequest($store_id, $customer_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'customer_id' is set
         if ($customer_id === null || (is_array($customer_id) && count($customer_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $customer_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/customers/{customer_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($customer_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'customer_id' . '}',
-                ObjectSerializer::toPathValue($customer_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'customer_id' . '}',
+            ObjectSerializer::toPathValue($customer_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -6613,7 +4605,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -6621,8 +4613,7 @@ class EcommerceApi
 
     public function updateOrder($store_id, $order_id, $body)
     {
-        $response = $this->updateOrderWithHttpInfo($store_id, $order_id, $body);
-        return $response;
+        return $this->updateOrderWithHttpInfo($store_id, $order_id, $body);
     }
 
     public function updateOrderWithHttpInfo($store_id, $order_id, $body)
@@ -6631,11 +4622,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -6652,107 +4639,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateOrderRequest($store_id, $order_id, $body)
+    protected function updateOrderRequest($store_id, $order_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'order_id' is set
         if ($order_id === null || (is_array($order_id) && count($order_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $order_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/orders/{order_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($order_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'order_id' . '}',
-                ObjectSerializer::toPathValue($order_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'order_id' . '}',
+            ObjectSerializer::toPathValue($order_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -6781,7 +4732,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -6789,8 +4740,7 @@ class EcommerceApi
 
     public function updateOrderLineItem($store_id, $order_id, $line_id, $body)
     {
-        $response = $this->updateOrderLineItemWithHttpInfo($store_id, $order_id, $line_id, $body);
-        return $response;
+        return $this->updateOrderLineItemWithHttpInfo($store_id, $order_id, $line_id, $body);
     }
 
     public function updateOrderLineItemWithHttpInfo($store_id, $order_id, $line_id, $body)
@@ -6799,11 +4749,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -6820,121 +4766,83 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateOrderLineItemRequest($store_id, $order_id, $line_id, $body)
+    protected function updateOrderLineItemRequest($store_id, $order_id, $line_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'order_id' is set
         if ($order_id === null || (is_array($order_id) && count($order_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $order_id when calling '
             );
         }
         // verify the required parameter 'line_id' is set
         if ($line_id === null || (is_array($line_id) && count($line_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $line_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/orders/{order_id}/lines/{line_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($order_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'order_id' . '}',
-                ObjectSerializer::toPathValue($order_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'order_id' . '}',
+            ObjectSerializer::toPathValue($order_id),
+            $resourcePath
+        );
         // path params
-        if ($line_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'line_id' . '}',
-                ObjectSerializer::toPathValue($line_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'line_id' . '}',
+            ObjectSerializer::toPathValue($line_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -6963,7 +4871,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -6971,8 +4879,7 @@ class EcommerceApi
 
     public function updateStoreProduct($store_id, $product_id, $body)
     {
-        $response = $this->updateStoreProductWithHttpInfo($store_id, $product_id, $body);
-        return $response;
+        return $this->updateStoreProductWithHttpInfo($store_id, $product_id, $body);
     }
 
     public function updateStoreProductWithHttpInfo($store_id, $product_id, $body)
@@ -6981,11 +4888,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -7002,107 +4905,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateStoreProductRequest($store_id, $product_id, $body)
+    protected function updateStoreProductRequest($store_id, $product_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -7131,7 +4998,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -7139,8 +5006,7 @@ class EcommerceApi
 
     public function updateProductImage($store_id, $product_id, $image_id, $body)
     {
-        $response = $this->updateProductImageWithHttpInfo($store_id, $product_id, $image_id, $body);
-        return $response;
+        return $this->updateProductImageWithHttpInfo($store_id, $product_id, $image_id, $body);
     }
 
     public function updateProductImageWithHttpInfo($store_id, $product_id, $image_id, $body)
@@ -7149,11 +5015,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -7170,121 +5032,83 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateProductImageRequest($store_id, $product_id, $image_id, $body)
+    protected function updateProductImageRequest($store_id, $product_id, $image_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         // verify the required parameter 'image_id' is set
         if ($image_id === null || (is_array($image_id) && count($image_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $image_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/images/{image_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
         // path params
-        if ($image_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'image_id' . '}',
-                ObjectSerializer::toPathValue($image_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'image_id' . '}',
+            ObjectSerializer::toPathValue($image_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -7313,7 +5137,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -7321,8 +5145,7 @@ class EcommerceApi
 
     public function updateProductVariant($store_id, $product_id, $variant_id, $body)
     {
-        $response = $this->updateProductVariantWithHttpInfo($store_id, $product_id, $variant_id, $body);
-        return $response;
+        return $this->updateProductVariantWithHttpInfo($store_id, $product_id, $variant_id, $body);
     }
 
     public function updateProductVariantWithHttpInfo($store_id, $product_id, $variant_id, $body)
@@ -7331,11 +5154,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -7352,121 +5171,83 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updateProductVariantRequest($store_id, $product_id, $variant_id, $body)
+    protected function updateProductVariantRequest($store_id, $product_id, $variant_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         // verify the required parameter 'variant_id' is set
         if ($variant_id === null || (is_array($variant_id) && count($variant_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $variant_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/variants/{variant_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
         // path params
-        if ($variant_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'variant_id' . '}',
-                ObjectSerializer::toPathValue($variant_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'variant_id' . '}',
+            ObjectSerializer::toPathValue($variant_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -7495,7 +5276,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -7503,8 +5284,7 @@ class EcommerceApi
 
     public function updatePromoCode($store_id, $promo_rule_id, $promo_code_id, $body)
     {
-        $response = $this->updatePromoCodeWithHttpInfo($store_id, $promo_rule_id, $promo_code_id, $body);
-        return $response;
+        return $this->updatePromoCodeWithHttpInfo($store_id, $promo_rule_id, $promo_code_id, $body);
     }
 
     public function updatePromoCodeWithHttpInfo($store_id, $promo_rule_id, $promo_code_id, $body)
@@ -7513,11 +5293,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -7534,121 +5310,83 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updatePromoCodeRequest($store_id, $promo_rule_id, $promo_code_id, $body)
+    protected function updatePromoCodeRequest($store_id, $promo_rule_id, $promo_code_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'promo_rule_id' is set
         if ($promo_rule_id === null || (is_array($promo_rule_id) && count($promo_rule_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_rule_id when calling '
             );
         }
         // verify the required parameter 'promo_code_id' is set
         if ($promo_code_id === null || (is_array($promo_code_id) && count($promo_code_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_code_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/promo-rules/{promo_rule_id}/promo-codes/{promo_code_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($promo_rule_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_rule_id' . '}',
-                ObjectSerializer::toPathValue($promo_rule_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_rule_id' . '}',
+            ObjectSerializer::toPathValue($promo_rule_id),
+            $resourcePath
+        );
         // path params
-        if ($promo_code_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_code_id' . '}',
-                ObjectSerializer::toPathValue($promo_code_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_code_id' . '}',
+            ObjectSerializer::toPathValue($promo_code_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -7677,7 +5415,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -7685,8 +5423,7 @@ class EcommerceApi
 
     public function updatePromoRule($store_id, $promo_rule_id, $body)
     {
-        $response = $this->updatePromoRuleWithHttpInfo($store_id, $promo_rule_id, $body);
-        return $response;
+        return $this->updatePromoRuleWithHttpInfo($store_id, $promo_rule_id, $body);
     }
 
     public function updatePromoRuleWithHttpInfo($store_id, $promo_rule_id, $body)
@@ -7695,11 +5432,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -7716,107 +5449,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function updatePromoRuleRequest($store_id, $promo_rule_id, $body)
+    protected function updatePromoRuleRequest($store_id, $promo_rule_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'promo_rule_id' is set
         if ($promo_rule_id === null || (is_array($promo_rule_id) && count($promo_rule_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_rule_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/promo-rules/{promo_rule_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($promo_rule_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_rule_id' . '}',
-                ObjectSerializer::toPathValue($promo_rule_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_rule_id' . '}',
+            ObjectSerializer::toPathValue($promo_rule_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -7845,7 +5542,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -7853,8 +5550,7 @@ class EcommerceApi
 
     public function addStore($body)
     {
-        $response = $this->addStoreWithHttpInfo($body);
-        return $response;
+        return $this->addStoreWithHttpInfo($body);
     }
 
     public function addStoreWithHttpInfo($body)
@@ -7863,11 +5559,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -7884,79 +5576,47 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addStoreRequest($body)
+    protected function addStoreRequest($body): Request
     {
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -7985,7 +5645,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -7993,8 +5653,7 @@ class EcommerceApi
 
     public function addStoreCart($store_id, $body)
     {
-        $response = $this->addStoreCartWithHttpInfo($store_id, $body);
-        return $response;
+        return $this->addStoreCartWithHttpInfo($store_id, $body);
     }
 
     public function addStoreCartWithHttpInfo($store_id, $body)
@@ -8003,11 +5662,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -8024,93 +5679,59 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addStoreCartRequest($store_id, $body)
+    protected function addStoreCartRequest($store_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/carts';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -8139,7 +5760,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -8147,8 +5768,7 @@ class EcommerceApi
 
     public function addCartLineItem($store_id, $cart_id, $body)
     {
-        $response = $this->addCartLineItemWithHttpInfo($store_id, $cart_id, $body);
-        return $response;
+        return $this->addCartLineItemWithHttpInfo($store_id, $cart_id, $body);
     }
 
     public function addCartLineItemWithHttpInfo($store_id, $cart_id, $body)
@@ -8157,11 +5777,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -8178,107 +5794,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addCartLineItemRequest($store_id, $cart_id, $body)
+    protected function addCartLineItemRequest($store_id, $cart_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'cart_id' is set
         if ($cart_id === null || (is_array($cart_id) && count($cart_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $cart_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/carts/{cart_id}/lines';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($cart_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'cart_id' . '}',
-                ObjectSerializer::toPathValue($cart_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'cart_id' . '}',
+            ObjectSerializer::toPathValue($cart_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -8307,7 +5887,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -8315,8 +5895,7 @@ class EcommerceApi
 
     public function addStoreCustomer($store_id, $body)
     {
-        $response = $this->addStoreCustomerWithHttpInfo($store_id, $body);
-        return $response;
+        return $this->addStoreCustomerWithHttpInfo($store_id, $body);
     }
 
     public function addStoreCustomerWithHttpInfo($store_id, $body)
@@ -8325,11 +5904,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -8346,93 +5921,59 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addStoreCustomerRequest($store_id, $body)
+    protected function addStoreCustomerRequest($store_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/customers';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -8461,7 +6002,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -8469,8 +6010,7 @@ class EcommerceApi
 
     public function addStoreOrder($store_id, $body)
     {
-        $response = $this->addStoreOrderWithHttpInfo($store_id, $body);
-        return $response;
+        return $this->addStoreOrderWithHttpInfo($store_id, $body);
     }
 
     public function addStoreOrderWithHttpInfo($store_id, $body)
@@ -8479,11 +6019,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -8500,93 +6036,59 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addStoreOrderRequest($store_id, $body)
+    protected function addStoreOrderRequest($store_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/orders';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -8615,7 +6117,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -8623,8 +6125,7 @@ class EcommerceApi
 
     public function addOrderLineItem($store_id, $order_id, $body)
     {
-        $response = $this->addOrderLineItemWithHttpInfo($store_id, $order_id, $body);
-        return $response;
+        return $this->addOrderLineItemWithHttpInfo($store_id, $order_id, $body);
     }
 
     public function addOrderLineItemWithHttpInfo($store_id, $order_id, $body)
@@ -8633,11 +6134,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -8654,107 +6151,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addOrderLineItemRequest($store_id, $order_id, $body)
+    protected function addOrderLineItemRequest($store_id, $order_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'order_id' is set
         if ($order_id === null || (is_array($order_id) && count($order_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $order_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/orders/{order_id}/lines';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($order_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'order_id' . '}',
-                ObjectSerializer::toPathValue($order_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'order_id' . '}',
+            ObjectSerializer::toPathValue($order_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -8783,7 +6244,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -8791,8 +6252,7 @@ class EcommerceApi
 
     public function addStoreProduct($store_id, $body)
     {
-        $response = $this->addStoreProductWithHttpInfo($store_id, $body);
-        return $response;
+        return $this->addStoreProductWithHttpInfo($store_id, $body);
     }
 
     public function addStoreProductWithHttpInfo($store_id, $body)
@@ -8801,11 +6261,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -8822,93 +6278,59 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addStoreProductRequest($store_id, $body)
+    protected function addStoreProductRequest($store_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -8937,7 +6359,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -8945,8 +6367,7 @@ class EcommerceApi
 
     public function addProductImage($store_id, $product_id, $body)
     {
-        $response = $this->addProductImageWithHttpInfo($store_id, $product_id, $body);
-        return $response;
+        return $this->addProductImageWithHttpInfo($store_id, $product_id, $body);
     }
 
     public function addProductImageWithHttpInfo($store_id, $product_id, $body)
@@ -8955,11 +6376,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -8976,107 +6393,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addProductImageRequest($store_id, $product_id, $body)
+    protected function addProductImageRequest($store_id, $product_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/images';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -9105,7 +6486,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -9113,8 +6494,7 @@ class EcommerceApi
 
     public function addProductVariants($store_id, $product_id, $body)
     {
-        $response = $this->addProductVariantsWithHttpInfo($store_id, $product_id, $body);
-        return $response;
+        return $this->addProductVariantsWithHttpInfo($store_id, $product_id, $body);
     }
 
     public function addProductVariantsWithHttpInfo($store_id, $product_id, $body)
@@ -9123,11 +6503,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -9144,107 +6520,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addProductVariantsRequest($store_id, $product_id, $body)
+    protected function addProductVariantsRequest($store_id, $product_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/variants';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -9273,7 +6613,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -9281,8 +6621,7 @@ class EcommerceApi
 
     public function addPromoCode($store_id, $promo_rule_id, $body)
     {
-        $response = $this->addPromoCodeWithHttpInfo($store_id, $promo_rule_id, $body);
-        return $response;
+        return $this->addPromoCodeWithHttpInfo($store_id, $promo_rule_id, $body);
     }
 
     public function addPromoCodeWithHttpInfo($store_id, $promo_rule_id, $body)
@@ -9291,11 +6630,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -9312,107 +6647,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addPromoCodeRequest($store_id, $promo_rule_id, $body)
+    protected function addPromoCodeRequest($store_id, $promo_rule_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'promo_rule_id' is set
         if ($promo_rule_id === null || (is_array($promo_rule_id) && count($promo_rule_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $promo_rule_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/promo-rules/{promo_rule_id}/promo-codes';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($promo_rule_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'promo_rule_id' . '}',
-                ObjectSerializer::toPathValue($promo_rule_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'promo_rule_id' . '}',
+            ObjectSerializer::toPathValue($promo_rule_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -9441,7 +6740,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -9449,8 +6748,7 @@ class EcommerceApi
 
     public function addPromoRules($store_id, $body)
     {
-        $response = $this->addPromoRulesWithHttpInfo($store_id, $body);
-        return $response;
+        return $this->addPromoRulesWithHttpInfo($store_id, $body);
     }
 
     public function addPromoRulesWithHttpInfo($store_id, $body)
@@ -9459,11 +6757,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -9480,93 +6774,59 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addPromoRulesRequest($store_id, $body)
+    protected function addPromoRulesRequest($store_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/promo-rules';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -9595,7 +6855,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -9603,8 +6863,7 @@ class EcommerceApi
 
     public function setStoreCustomer($store_id, $customer_id, $body)
     {
-        $response = $this->setStoreCustomerWithHttpInfo($store_id, $customer_id, $body);
-        return $response;
+        return $this->setStoreCustomerWithHttpInfo($store_id, $customer_id, $body);
     }
 
     public function setStoreCustomerWithHttpInfo($store_id, $customer_id, $body)
@@ -9613,11 +6872,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -9634,107 +6889,71 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function setStoreCustomerRequest($store_id, $customer_id, $body)
+    protected function setStoreCustomerRequest($store_id, $customer_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'customer_id' is set
         if ($customer_id === null || (is_array($customer_id) && count($customer_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $customer_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/customers/{customer_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($customer_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'customer_id' . '}',
-                ObjectSerializer::toPathValue($customer_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'customer_id' . '}',
+            ObjectSerializer::toPathValue($customer_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -9763,7 +6982,7 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PUT',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
@@ -9771,8 +6990,7 @@ class EcommerceApi
 
     public function addProductVariant($store_id, $product_id, $variant_id, $body)
     {
-        $response = $this->addProductVariantWithHttpInfo($store_id, $product_id, $variant_id, $body);
-        return $response;
+        return $this->addProductVariantWithHttpInfo($store_id, $product_id, $variant_id, $body);
     }
 
     public function addProductVariantWithHttpInfo($store_id, $product_id, $variant_id, $body)
@@ -9781,11 +6999,7 @@ class EcommerceApi
 
         try {
             $options = $this->createHttpClientOption();
-            try {
-                $response = $this->client->send($request, $options);
-            } catch (RequestException $e) {
-                throw $e;
-            }
+            $response = $this->client->send($request, $options);
 
             $statusCode = $response->getStatusCode();
 
@@ -9802,121 +7016,83 @@ class EcommerceApi
                 );
             }
 
-            $responseBody = $response->getBody();
-            $content = $responseBody->getContents();
-            $content = json_decode($content);
+            return json_decode($response->getBody()->getContents());
 
-            return $content;
-
-        } catch (ApiException $e) {
+        } catch (ApiException | GuzzleException $e) {
             throw $e->getResponseBody();
         }
     }
 
-    protected function addProductVariantRequest($store_id, $product_id, $variant_id, $body)
+    protected function addProductVariantRequest($store_id, $product_id, $variant_id, $body): Request
     {
         // verify the required parameter 'store_id' is set
         if ($store_id === null || (is_array($store_id) && count($store_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $store_id when calling '
             );
         }
         // verify the required parameter 'product_id' is set
         if ($product_id === null || (is_array($product_id) && count($product_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $product_id when calling '
             );
         }
         // verify the required parameter 'variant_id' is set
         if ($variant_id === null || (is_array($variant_id) && count($variant_id) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $variant_id when calling '
             );
         }
         // verify the required parameter 'body' is set
         if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Missing the required parameter $body when calling '
             );
         }
 
         $resourcePath = '/ecommerce/stores/{store_id}/products/{product_id}/variants/{variant_id}';
-        $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        $multipart = false;
 
         // path params
-        if ($store_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'store_id' . '}',
-                ObjectSerializer::toPathValue($store_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'store_id' . '}',
+            ObjectSerializer::toPathValue($store_id),
+            $resourcePath
+        );
         // path params
-        if ($product_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'product_id' . '}',
-                ObjectSerializer::toPathValue($product_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'product_id' . '}',
+            ObjectSerializer::toPathValue($product_id),
+            $resourcePath
+        );
         // path params
-        if ($variant_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'variant_id' . '}',
-                ObjectSerializer::toPathValue($variant_id),
-                $resourcePath
-            );
-        }
+        $resourcePath = str_replace(
+            '{' . 'variant_id' . '}',
+            ObjectSerializer::toPathValue($variant_id),
+            $resourcePath
+        );
 
         // body params
-        $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
+        $_tempBody = $body ?? null;
 
-        if ($multipart) {
-            $headers = $this->headerSelector->selectHeadersForMultipart(
-                ['application/json', 'application/problem+json']
-            );
-        } else {
-            $headers = $this->headerSelector->selectHeaders(
-                ['application/json', 'application/problem+json'],
-                ['application/json']
-            );
-        }
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
 
         // for model (json/xml)
         if (isset($_tempBody)) {
             $httpBody = $_tempBody;
 
             if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof \stdClass) {
+                if ($httpBody instanceof stdClass) {
                     $httpBody = \GuzzleHttp\json_encode($httpBody);
                 }
                 if (is_array($httpBody)) {
                     $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
                 }
-            }
-        } elseif (count($formParams) > 0) {
-            if ($multipart) {
-                $multipartContents = [];
-                foreach ($formParams as $formParamName => $formParamValue) {
-                    $multipartContents[] = [
-                        'name' => $formParamName,
-                        'contents' => $formParamValue
-                    ];
-                }
-                $httpBody = new MultipartStream($multipartContents);
-
-            } elseif ($headers['Content-Type'] === 'application/json') {
-                $httpBody = \GuzzleHttp\json_encode($formParams);
-
-            } else {
-                $httpBody = Query::build($formParams);
             }
         }
 
@@ -9945,26 +7121,9 @@ class EcommerceApi
         $query = Query::build($queryParams);
         return new Request(
             'PUT',
-            $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
             $headers,
             $httpBody
         );
-    }
-
-    protected function createHttpClientOption()
-    {
-        $options = [];
-        if ($this->config->getDebug()) {
-            $options[RequestOptions::DEBUG] = fopen($this->config->getDebugFile(), 'a');
-            if (!$options[RequestOptions::DEBUG]) {
-                throw new \RuntimeException('Failed to open the debug file: ' . $this->config->getDebugFile());
-            }
-        }
-
-        if ($this->config->getTimeout()) {
-            $options[RequestOptions::TIMEOUT] = $this->config->getTimeout();
-        }
-
-        return $options;
     }
 }

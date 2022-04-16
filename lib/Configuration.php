@@ -19,6 +19,7 @@
 
 namespace MailchimpMarketing;
 
+use InvalidArgumentException;
 use MailchimpMarketing\Api\AccountExportApi;
 use MailchimpMarketing\Api\AccountExportsApi;
 use MailchimpMarketing\Api\ActivityFeedApi;
@@ -94,11 +95,11 @@ class Configuration
         $this->verifiedDomains = new VerifiedDomainsApi($this);
     }
 
-    public function setConfig($config = array())
+    public function setConfig($config = array()): Configuration
     {
-        $apiKey = isset($config['apiKey']) ? $config['apiKey'] : '';
-        $accessToken = isset($config['accessToken']) ? $config['accessToken'] : '';
-        $server = isset($config['server']) ? $config['server'] : 'invalid-server';
+        $apiKey = $config['apiKey'] ?? '';
+        $accessToken = $config['accessToken'] ?? '';
+        $server = $config['server'] ?? 'invalid-server';
         $host = str_replace('server', $server, $this->getHost());
 
         // Basic Authentication
@@ -121,7 +122,7 @@ class Configuration
         return $this;
     }
 
-    public function setApiKey($apiKeyIdentifier, $key)
+    public function setApiKey($apiKeyIdentifier, $key): Configuration
     {
         $this->apiKeys[$apiKeyIdentifier] = $key;
         return $this;
@@ -129,10 +130,10 @@ class Configuration
 
     public function getApiKey($apiKeyIdentifier)
     {
-        return isset($this->apiKeys[$apiKeyIdentifier]) ? $this->apiKeys[$apiKeyIdentifier] : null;
+        return $this->apiKeys[$apiKeyIdentifier] ?? null;
     }
 
-    public function setApiKeyPrefix($apiKeyIdentifier, $prefix)
+    public function setApiKeyPrefix($apiKeyIdentifier, $prefix): Configuration
     {
         $this->apiKeyPrefixes[$apiKeyIdentifier] = $prefix;
         return $this;
@@ -140,97 +141,97 @@ class Configuration
 
     public function getApiKeyPrefix($apiKeyIdentifier)
     {
-        return isset($this->apiKeyPrefixes[$apiKeyIdentifier]) ? $this->apiKeyPrefixes[$apiKeyIdentifier] : null;
+        return $this->apiKeyPrefixes[$apiKeyIdentifier] ?? null;
     }
 
-    public function setAccessToken($accessToken)
+    public function setAccessToken($accessToken): Configuration
     {
         $this->accessToken = $accessToken;
         return $this;
     }
 
-    public function getAccessToken()
+    public function getAccessToken(): string
     {
         return $this->accessToken;
     }
 
-    public function setUsername($username)
+    public function setUsername($username): Configuration
     {
         $this->username = $username;
         return $this;
     }
 
-    public function getUsername()
+    public function getUsername(): string
     {
         return $this->username;
     }
 
-    public function setPassword($password)
+    public function setPassword($password): Configuration
     {
         $this->password = $password;
         return $this;
     }
 
-    public function getPassword()
+    public function getPassword(): string
     {
         return $this->password;
     }
 
-    public function setHost($host)
+    public function setHost($host): Configuration
     {
         $this->host = $host;
         return $this;
     }
 
-    public function getHost()
+    public function getHost(): string
     {
         return $this->host;
     }
 
-    public function setUserAgent($userAgent)
+    public function setUserAgent($userAgent): Configuration
     {
         if (!is_string($userAgent)) {
-            throw new \InvalidArgumentException('User-agent must be a string.');
+            throw new InvalidArgumentException('User-agent must be a string.');
         }
 
         $this->userAgent = $userAgent;
         return $this;
     }
 
-    public function getUserAgent()
+    public function getUserAgent(): string
     {
         return $this->userAgent;
     }
 
-    public function setDebug($debug)
+    public function setDebug($debug): Configuration
     {
         $this->debug = $debug;
         return $this;
     }
 
-    public function getDebug()
+    public function getDebug(): bool
     {
         return $this->debug;
     }
 
-    public function setDebugFile($debugFile)
+    public function setDebugFile($debugFile): Configuration
     {
         $this->debugFile = $debugFile;
         return $this;
     }
 
-    public function getDebugFile()
+    public function getDebugFile(): string
     {
         return $this->debugFile;
     }
 
-    public function setTempFolderPath($tempFolderPath)
+    public function setTempFolderPath($tempFolderPath): Configuration
     {
         $this->tempFolderPath = $tempFolderPath;
         return $this;
     }
 
-    public function getTempFolderPath()
+    public function getTempFolderPath(): string
     {
         return $this->tempFolderPath;
     }
@@ -240,12 +241,12 @@ class Configuration
         $this->timeout = $timeout;
     }
 
-    public function getTimeout()
+    public function getTimeout(): int
     {
         return $this->timeout;
     }
 
-    public static function getDefaultConfiguration()
+    public static function getDefaultConfiguration(): Configuration
     {
         if (self::$defaultConfiguration === null) {
             self::$defaultConfiguration = new Configuration();
@@ -259,7 +260,7 @@ class Configuration
         self::$defaultConfiguration = $config;
     }
 
-    public static function toDebugReport()
+    public static function toDebugReport(): string
     {
         $report  = 'PHP SDK (MailchimpMarketing) Debug Report:' . PHP_EOL;
         $report .= '    OS: ' . php_uname() . PHP_EOL;
