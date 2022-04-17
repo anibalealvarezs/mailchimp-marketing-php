@@ -10,45 +10,34 @@ The official PHP client library for the Mailchimp Marketing API
 
 ## Installation
 
-**Option 1:** Install via Packagist
-```
-composer require mailchimp/marketing
-```
-
-Or add the following to `composer.json`
-```
+Add the following to `composer.json`
+```json
 {
   "require": {
-    "mailchimp/marketing": "*"
-  }
+    "mailchimp/marketing": "dev-master",
+  },
+  "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/anibalealvarezs/mailchimp-marketing-php"
+        }
+    ]
 }
 ```
 
 Install all composer dependencies using:
-```
+```shell
 composer install
 ```
 
-**Option 2:** Install Manually
-
-Clone the repo
-```
-git clone git@github.com:mailchimp/mailchimp-marketing-php.git
-```
-
-In the client library project root, install all dependencies
-```
-composer install
-```
-
-Manually include `vendor/autoload.php` in your implementation
-```php
-require_once('/path/to/MailchimpMarketing/vendor/autoload.php');
+Or install it via GitHub
+```shell
+composer require mailchimp/marketing dev-master
 ```
 
 ## Quick Start
 
-### Note that this SDK requires PHP 7.2 or above.
+### Note that this SDK requires PHP 8.0 or above.
 
 ```php
 require_once('/path/to/MailchimpMarketing/vendor/autoload.php');

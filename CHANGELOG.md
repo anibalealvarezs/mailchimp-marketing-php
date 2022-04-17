@@ -34,6 +34,10 @@
 
 ## Marketing
 
+### dev-master
+* Compatibility with PHP 8.x
+* Code refactoring
+
 ### 3.0.72
 * Updated the `PATCH /automations/.../emails/.../` documentation to state the required `workflow_type`
 
