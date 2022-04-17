@@ -8,6 +8,7 @@ use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\RequestOptions;
 use stdClass;
+use function GuzzleHttp\Psr7\str;
 
 trait ApiTrait
 {
@@ -71,8 +72,10 @@ trait ApiTrait
 
             return json_decode($response->getBody()->getContents());
 
-        } catch (ApiException | GuzzleException $e) {
+        } catch (ApiException $e) {
             throw $e->getResponseBody();
+        } catch (GuzzleHttp\Exception\RequestException $e) {
+            throw str($e->getResponse());
         }
     }
 
