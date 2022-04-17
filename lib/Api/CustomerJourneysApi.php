@@ -29,17 +29,14 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
-use InvalidArgumentException;
-use MailchimpMarketing\ApiException;
 use MailchimpMarketing\ApiTrait;
-use MailchimpMarketing\ObjectSerializer;
-use stdClass;
 
 class CustomerJourneysApi
 {
     use ApiTrait;
+
+    const END_POINT = '/customer-journeys';
 
     public function trigger($journey_id, $step_id, $body)
     {
@@ -50,121 +47,31 @@ class CustomerJourneysApi
     {
         $request = $this->triggerRequest($journey_id, $step_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function triggerRequest($journey_id, $step_id, $body): Request
     {
         // verify the required parameter 'journey_id' is set
-        if ($journey_id === null || (is_array($journey_id) && count($journey_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $journey_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($journey_id);
         // verify the required parameter 'step_id' is set
-        if ($step_id === null || (is_array($step_id) && count($step_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $step_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($step_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/customer-journeys/journeys/{journey_id}/steps/{step_id}/actions/trigger';
+        $resourcePath = self::END_POINT . '/journeys/{journey_id}/steps/{step_id}/actions/trigger';
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'journey_id' . '}',
-            ObjectSerializer::toPathValue($journey_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'step_id' . '}',
-            ObjectSerializer::toPathValue($step_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'journey_id', $journey_id);
+        $this->pathParam($resourcePath, 'step_id', $step_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 }

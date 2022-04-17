@@ -29,17 +29,15 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
-use MailchimpMarketing\ApiException;
 use MailchimpMarketing\ApiTrait;
-use MailchimpMarketing\ObjectSerializer;
-use stdClass;
 
 class BatchWebhooksApi
 {
     use ApiTrait;
+
+    const END_POINT = '/batch-webhooks';
 
     public function remove($batch_webhook_id)
     {
@@ -50,88 +48,25 @@ class BatchWebhooksApi
     {
         $request = $this->removeRequest($batch_webhook_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function removeRequest($batch_webhook_id): Request
     {
         // verify the required parameter 'batch_webhook_id' is set
-        if ($batch_webhook_id === null || (is_array($batch_webhook_id) && count($batch_webhook_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $batch_webhook_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($batch_webhook_id);
 
-        $resourcePath = '/batch-webhooks/{batch_webhook_id}';
+        $resourcePath = self::END_POINT . '/{batch_webhook_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'batch_webhook_id' . '}',
-            ObjectSerializer::toPathValue($batch_webhook_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'batch_webhook_id', $batch_webhook_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function get($batch_webhook_id, $fields = null, $exclude_fields = null)
@@ -143,102 +78,28 @@ class BatchWebhooksApi
     {
         $request = $this->getRequest($batch_webhook_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getRequest($batch_webhook_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'batch_webhook_id' is set
-        if ($batch_webhook_id === null || (is_array($batch_webhook_id) && count($batch_webhook_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $batch_webhook_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($batch_webhook_id);
 
-        $resourcePath = '/batch-webhooks/{batch_webhook_id}';
+        $resourcePath = self::END_POINT . '/{batch_webhook_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'batch_webhook_id' . '}',
-            ObjectSerializer::toPathValue($batch_webhook_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'batch_webhook_id', $batch_webhook_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function list($fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -250,30 +111,7 @@ class BatchWebhooksApi
     {
         $request = $this->listRequest($fields, $exclude_fields, $count, $offset);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function listRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
@@ -283,69 +121,20 @@ class BatchWebhooksApi
         }
 
 
-        $resourcePath = '/batch-webhooks';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function update($batch_webhook_id, $body)
@@ -357,110 +146,29 @@ class BatchWebhooksApi
     {
         $request = $this->updateRequest($batch_webhook_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateRequest($batch_webhook_id, $body): Request
     {
         // verify the required parameter 'batch_webhook_id' is set
-        if ($batch_webhook_id === null || (is_array($batch_webhook_id) && count($batch_webhook_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $batch_webhook_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($batch_webhook_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/batch-webhooks/{batch_webhook_id}';
+        $resourcePath = self::END_POINT . '/{batch_webhook_id}';
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'batch_webhook_id' . '}',
-            ObjectSerializer::toPathValue($batch_webhook_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'batch_webhook_id', $batch_webhook_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function create($body)
@@ -472,97 +180,24 @@ class BatchWebhooksApi
     {
         $request = $this->createRequest($body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createRequest($body): Request
     {
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/batch-webhooks';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
 
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 }

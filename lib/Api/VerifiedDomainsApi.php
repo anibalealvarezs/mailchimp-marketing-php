@@ -29,18 +29,14 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
-use InvalidArgumentException;
-use MailchimpMarketing\ApiException;
 use MailchimpMarketing\ApiTrait;
-use MailchimpMarketing\ObjectSerializer;
-use stdClass;
 
 class VerifiedDomainsApi
 {
     use ApiTrait;
+
+    const END_POINT = '/verified-domains';
 
     /**
      */
@@ -55,48 +51,27 @@ class VerifiedDomainsApi
     {
         $request = $this->createVerifiedDomainRequest($body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createVerifiedDomainRequest($body): Request
     {
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/verified-domains';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
 
-
         // body params
-        return $this->setBodyParams($body, $headerParams, $queryParams, $resourcePath);
+        $headers = $this->setHeaders($headerParams);
+
+        // for model (json/xml)
+        $httpBody = $body;
+
+        $httpBody = $this->encodeBodyWhenJSON($httpBody, $headers);
+
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function deleteDomain($domain_name)
@@ -108,88 +83,25 @@ class VerifiedDomainsApi
     {
         $request = $this->deleteDomainRequest($domain_name);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteDomainRequest($domain_name): Request
     {
         // verify the required parameter 'domain_name' is set
-        if ($domain_name === null || (is_array($domain_name) && count($domain_name) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $domain_name when calling '
-            );
-        }
+        $this->checkRequiredParameter($domain_name);
 
-        $resourcePath = '/verified-domains/{domain_name}';
+        $resourcePath = self::END_POINT . '/{domain_name}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'domain_name' . '}',
-            ObjectSerializer::toPathValue($domain_name),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'domain_name', $domain_name);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getDomain($domain_name)
@@ -207,26 +119,18 @@ class VerifiedDomainsApi
     protected function getDomainRequest($domain_name): Request
     {
         // verify the required parameter 'domain_name' is set
-        if ($domain_name === null || (is_array($domain_name) && count($domain_name) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $domain_name when calling '
-            );
-        }
+        $this->checkRequiredParameter($domain_name);
 
-        $resourcePath = '/verified-domains/{domain_name}';
+        $resourcePath = self::END_POINT . '/{domain_name}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'domain_name' . '}',
-            ObjectSerializer::toPathValue($domain_name),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'domain_name', $domain_name);
 
-        // body params
-        return $this->setBodyParams2($httpBody, $headerParams, $queryParams, $resourcePath);
+        $headers = $this->setHeaders($headerParams);
+
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getVerifiedDomainsAll()
@@ -244,14 +148,14 @@ class VerifiedDomainsApi
     protected function getVerifiedDomainsAllRequest(): Request
     {
 
-        $resourcePath = '/verified-domains';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
+        $headers = $this->setHeaders($headerParams);
 
-        // body params
-        return $this->setBodyParams2($httpBody, $headerParams, $queryParams, $resourcePath);
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function submitDomainVerification($domain_name, $body)
@@ -269,163 +173,24 @@ class VerifiedDomainsApi
     protected function submitDomainVerificationRequest($domain_name, $body): Request
     {
         // verify the required parameter 'domain_name' is set
-        if ($domain_name === null || (is_array($domain_name) && count($domain_name) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $domain_name when calling '
-            );
-        }
+        $this->checkRequiredParameter($domain_name);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/verified-domains/{domain_name}/actions/verify';
+        $resourcePath = self::END_POINT . '/{domain_name}/actions/verify';
         $queryParams = [];
         $headerParams = [];
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'domain_name' . '}',
-            ObjectSerializer::toPathValue($domain_name),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'domain_name', $domain_name);
 
         // body params
-        return $this->setBodyParams($body, $headerParams, $queryParams, $resourcePath);
-    }
-
-    /**
-     * @param $body
-     * @param array $headerParams
-     * @param array $queryParams
-     * @param $resourcePath
-     * @return Request
-     */
-    protected function setBodyParams($body, array $headerParams, array $queryParams, $resourcePath): Request
-    {
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
         // for model (json/xml)
         $httpBody = $body;
 
-        if ($headers['Content-Type'] === 'application/json') {
-            if ($httpBody instanceof stdClass) {
-                $httpBody = \GuzzleHttp\json_encode($httpBody);
-            }
-            if (is_array($httpBody)) {
-                $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-            }
-        }
+        $httpBody = $this->encodeBodyWhenJSON($httpBody, $headers);
 
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
-    }
-
-    /**
-     * @param Request $request
-     * @return mixed
-     */
-    protected function performRequest(Request $request)
-    {
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
-    }
-
-    /**
-     * @param $httpBody
-     * @param array $headerParams
-     * @param array $queryParams
-     * @param string $resourcePath
-     * @return Request
-     */
-    protected function setBodyParams2($httpBody, array $headerParams, array $queryParams, string $resourcePath): Request
-    {
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 }

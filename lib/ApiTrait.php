@@ -3,13 +3,17 @@
 namespace MailchimpMarketing;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Psr7\Query;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\RequestOptions;
+use stdClass;
 
 trait ApiTrait
 {
-    protected $client;
-    protected $config;
-    protected $headerSelector;
+    protected Client $client;
+    protected Configuration $config;
+    protected HeaderSelector $headerSelector;
 
     public function __construct(Configuration $config = null)
     {
@@ -42,5 +46,165 @@ trait ApiTrait
         }
 
         return $options;
+    }
+
+    protected function performRequest($request): mixed
+    {
+        try {
+            $options = $this->createHttpClientOption();
+            $response = $this->client->send($request, $options);
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode < 200 || $statusCode > 299) {
+                throw new ApiException(
+                    sprintf(
+                        '[%d] Error connecting to the API (%s)',
+                        $statusCode,
+                        $request->getUri()
+                    ),
+                    $statusCode,
+                    $response->getHeaders(),
+                    $response->getBody()
+                );
+            }
+
+            return json_decode($response->getBody()->getContents());
+
+        } catch (ApiException | GuzzleException $e) {
+            throw $e->getResponseBody();
+        }
+    }
+
+    protected function setHeaders($headerParams): array
+    {
+        $headers = $this->headerSelector->selectHeaders(
+            ['application/json', 'application/problem+json'],
+            ['application/json']
+        );
+
+        // Basic Authentication
+        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
+            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
+        }
+
+        // OAuth Authentication
+        if (!empty($this->config->getAccessToken())) {
+            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
+        }
+
+        $defaultHeaders = [];
+        if ($this->config->getUserAgent()) {
+            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
+        }
+
+        return array_merge($defaultHeaders, $headerParams, $headers);
+    }
+
+    protected function encodeBodyWhenJSON($httpBody, $headers)
+    {
+        if($headers['Content-Type'] === 'application/json') {
+            if ($httpBody instanceof stdClass) {
+                $httpBody = \GuzzleHttp\json_encode($httpBody);
+            }
+            if (is_array($httpBody)) {
+                $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
+            }
+        }
+        return $httpBody;
+    }
+
+    protected function checkRequiredParameter($parameter)
+    {
+        if ($parameter === null || (is_array($parameter) && count($parameter) === 0)) {
+            throw new InvalidArgumentException(
+                'Missing the required parameter $parameter when calling '
+            );
+        }
+    }
+
+    protected function queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody): Request
+    {
+        $query = Query::build($queryParams);
+        return new Request(
+            'GET',
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
+            $headers,
+            $httpBody
+        );
+    }
+
+    protected function queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody): Request
+    {
+        $query = Query::build($queryParams);
+        return new Request(
+            'POST',
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
+            $headers,
+            $httpBody
+        );
+    }
+
+    protected function queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody): Request
+    {
+        $query = Query::build($queryParams);
+        return new Request(
+            'DELETE',
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
+            $headers,
+            $httpBody
+        );
+    }
+
+    protected function queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody): Request
+    {
+        $query = Query::build($queryParams);
+        return new Request(
+            'PATCH',
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
+            $headers,
+            $httpBody
+        );
+    }
+
+    protected function queryAndRequestPut($queryParams, $resourcePath, $headers, $httpBody): Request
+    {
+        $query = Query::build($queryParams);
+        return new Request(
+            'PUT',
+            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
+            $headers,
+            $httpBody
+        );
+    }
+
+    protected function serializeParam(&$queryParams, $param, $key)
+    {
+        switch($key) {
+            case 'fields':
+            case 'exclude_fields':
+            case 'action':
+            case 'activity_filters':
+                if (is_array($param)) {
+                    $queryParams[$key] = ObjectSerializer::serializeCollection($param, 'csv');
+                } elseif ($param !== null) {
+                    $queryParams[$key] = ObjectSerializer::toQueryValue($param);
+                }
+                break;
+            default:
+                if ($param !== null) {
+                    $queryParams[$key] = ObjectSerializer::toQueryValue($param);
+                }
+                break;
+        }
+    }
+
+    protected function pathParam(&$resourcePath, $param, $key)
+    {
+        $resourcePath = str_replace(
+            '{' . $key . '}',
+            ObjectSerializer::toPathValue($param),
+            $resourcePath
+        );
     }
 }

@@ -29,17 +29,14 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
-use InvalidArgumentException;
-use MailchimpMarketing\ApiException;
 use MailchimpMarketing\ApiTrait;
-use MailchimpMarketing\ObjectSerializer;
-use stdClass;
 
 class SearchCampaignsApi
 {
     use ApiTrait;
+
+    const END_POINT = '/search-campaigns';
 
     public function search($query, $fields = null, $exclude_fields = null)
     {
@@ -50,97 +47,26 @@ class SearchCampaignsApi
     {
         $request = $this->searchRequest($query, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function searchRequest($query, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'query' is set
-        if ($query === null || (is_array($query) && count($query) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $query when calling '
-            );
-        }
+        $this->checkRequiredParameter($query);
 
-        $resourcePath = '/search-campaigns';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        $queryParams['query'] = ObjectSerializer::toQueryValue($query);
-
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $query, 'query');
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 }

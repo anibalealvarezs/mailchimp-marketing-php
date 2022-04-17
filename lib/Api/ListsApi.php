@@ -29,17 +29,15 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
-use MailchimpMarketing\ApiException;
 use MailchimpMarketing\ApiTrait;
-use MailchimpMarketing\ObjectSerializer;
-use stdClass;
 
 class ListsApi
 {
     use ApiTrait;
+
+    const END_POINT = '/lists';
 
     public function deleteList($list_id)
     {
@@ -50,88 +48,25 @@ class ListsApi
     {
         $request = $this->deleteListRequest($list_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteListRequest($list_id): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
 
-        $resourcePath = '/lists/{list_id}';
+        $resourcePath = self::END_POINT . '/{list_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function deleteInterestCategory($list_id, $interest_category_id)
@@ -143,100 +78,28 @@ class ListsApi
     {
         $request = $this->deleteInterestCategoryRequest($list_id, $interest_category_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteInterestCategoryRequest($list_id, $interest_category_id): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'interest_category_id' is set
-        if ($interest_category_id === null || (is_array($interest_category_id) && count($interest_category_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_category_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_category_id);
 
-        $resourcePath = '/lists/{list_id}/interest-categories/{interest_category_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/interest-categories/{interest_category_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_category_id' . '}',
-            ObjectSerializer::toPathValue($interest_category_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'interest_category_id', $interest_category_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function deleteInterestCategoryInterest($list_id, $interest_category_id, $interest_id)
@@ -248,112 +111,31 @@ class ListsApi
     {
         $request = $this->deleteInterestCategoryInterestRequest($list_id, $interest_category_id, $interest_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteInterestCategoryInterestRequest($list_id, $interest_category_id, $interest_id): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'interest_category_id' is set
-        if ($interest_category_id === null || (is_array($interest_category_id) && count($interest_category_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_category_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_category_id);
         // verify the required parameter 'interest_id' is set
-        if ($interest_id === null || (is_array($interest_id) && count($interest_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_id);
 
-        $resourcePath = '/lists/{list_id}/interest-categories/{interest_category_id}/interests/{interest_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/interest-categories/{interest_category_id}/interests/{interest_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_category_id' . '}',
-            ObjectSerializer::toPathValue($interest_category_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_id' . '}',
-            ObjectSerializer::toPathValue($interest_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'interest_category_id', $interest_category_id);
+        $this->pathParam($resourcePath, 'interest_id', $interest_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function deleteListMember($list_id, $subscriber_hash)
@@ -365,100 +147,28 @@ class ListsApi
     {
         $request = $this->deleteListMemberRequest($list_id, $subscriber_hash);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteListMemberRequest($list_id, $subscriber_hash): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function deleteListMemberNote($list_id, $subscriber_hash, $note_id)
@@ -470,112 +180,31 @@ class ListsApi
     {
         $request = $this->deleteListMemberNoteRequest($list_id, $subscriber_hash, $note_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteListMemberNoteRequest($list_id, $subscriber_hash, $note_id): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         // verify the required parameter 'note_id' is set
-        if ($note_id === null || (is_array($note_id) && count($note_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $note_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($note_id);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/notes/{note_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/notes/{note_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'note_id' . '}',
-            ObjectSerializer::toPathValue($note_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
+        $this->pathParam($resourcePath, 'note_id', $note_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function deleteListMergeField($list_id, $merge_id)
@@ -587,100 +216,28 @@ class ListsApi
     {
         $request = $this->deleteListMergeFieldRequest($list_id, $merge_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteListMergeFieldRequest($list_id, $merge_id): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'merge_id' is set
-        if ($merge_id === null || (is_array($merge_id) && count($merge_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $merge_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($merge_id);
 
-        $resourcePath = '/lists/{list_id}/merge-fields/{merge_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/merge-fields/{merge_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'merge_id' . '}',
-            ObjectSerializer::toPathValue($merge_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'merge_id', $merge_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function deleteSegment($list_id, $segment_id)
@@ -692,100 +249,28 @@ class ListsApi
     {
         $request = $this->deleteSegmentRequest($list_id, $segment_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteSegmentRequest($list_id, $segment_id): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'segment_id' is set
-        if ($segment_id === null || (is_array($segment_id) && count($segment_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $segment_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($segment_id);
 
-        $resourcePath = '/lists/{list_id}/segments/{segment_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/segments/{segment_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'segment_id' . '}',
-            ObjectSerializer::toPathValue($segment_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'segment_id', $segment_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function removeSegmentMember($list_id, $segment_id, $subscriber_hash)
@@ -797,112 +282,31 @@ class ListsApi
     {
         $request = $this->removeSegmentMemberRequest($list_id, $segment_id, $subscriber_hash);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function removeSegmentMemberRequest($list_id, $segment_id, $subscriber_hash): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'segment_id' is set
-        if ($segment_id === null || (is_array($segment_id) && count($segment_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $segment_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($segment_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
 
-        $resourcePath = '/lists/{list_id}/segments/{segment_id}/members/{subscriber_hash}';
+        $resourcePath = self::END_POINT . '/{list_id}/segments/{segment_id}/members/{subscriber_hash}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'segment_id' . '}',
-            ObjectSerializer::toPathValue($segment_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'segment_id', $segment_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function deleteListWebhook($list_id, $webhook_id)
@@ -914,100 +318,28 @@ class ListsApi
     {
         $request = $this->deleteListWebhookRequest($list_id, $webhook_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteListWebhookRequest($list_id, $webhook_id): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'webhook_id' is set
-        if ($webhook_id === null || (is_array($webhook_id) && count($webhook_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $webhook_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($webhook_id);
 
-        $resourcePath = '/lists/{list_id}/webhooks/{webhook_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/webhooks/{webhook_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'webhook_id' . '}',
-            ObjectSerializer::toPathValue($webhook_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'webhook_id', $webhook_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMemberTags($list_id, $subscriber_hash, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -1020,126 +352,37 @@ class ListsApi
     {
         $request = $this->getListMemberTagsRequest($list_id, $subscriber_hash, $fields, $exclude_fields, $count, $offset);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMemberTagsRequest($list_id, $subscriber_hash, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/tags';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/tags';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getAllLists($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $before_date_created = null, $since_date_created = null, $before_campaign_last_sent = null, $since_campaign_last_sent = null, $email = null, $sort_field = null, $sort_dir = null, $has_ecommerce_store = null, $include_total_contacts = null)
@@ -1151,30 +394,7 @@ class ListsApi
     {
         $request = $this->getAllListsRequest($fields, $exclude_fields, $count, $offset, $before_date_created, $since_date_created, $before_campaign_last_sent, $since_campaign_last_sent, $email, $sort_field, $sort_dir, $has_ecommerce_store, $include_total_contacts);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getAllListsRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $before_date_created = null, $since_date_created = null, $before_campaign_last_sent = null, $since_campaign_last_sent = null, $email = null, $sort_field = null, $sort_dir = null, $has_ecommerce_store = null, $include_total_contacts = null): Request
@@ -1184,105 +404,29 @@ class ListsApi
         }
 
 
-        $resourcePath = '/lists';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if ($before_date_created !== null) {
-            $queryParams['before_date_created'] = ObjectSerializer::toQueryValue($before_date_created);
-        }
-        // query params
-        if ($since_date_created !== null) {
-            $queryParams['since_date_created'] = ObjectSerializer::toQueryValue($since_date_created);
-        }
-        // query params
-        if ($before_campaign_last_sent !== null) {
-            $queryParams['before_campaign_last_sent'] = ObjectSerializer::toQueryValue($before_campaign_last_sent);
-        }
-        // query params
-        if ($since_campaign_last_sent !== null) {
-            $queryParams['since_campaign_last_sent'] = ObjectSerializer::toQueryValue($since_campaign_last_sent);
-        }
-        // query params
-        if ($email !== null) {
-            $queryParams['email'] = ObjectSerializer::toQueryValue($email);
-        }
-        // query params
-        if ($sort_field !== null) {
-            $queryParams['sort_field'] = ObjectSerializer::toQueryValue($sort_field);
-        }
-        // query params
-        if ($sort_dir !== null) {
-            $queryParams['sort_dir'] = ObjectSerializer::toQueryValue($sort_dir);
-        }
-        // query params
-        if ($has_ecommerce_store !== null) {
-            $queryParams['has_ecommerce_store'] = ObjectSerializer::toQueryValue($has_ecommerce_store);
-        }
-        // query params
-        if ($include_total_contacts !== null) {
-            $queryParams['include_total_contacts'] = ObjectSerializer::toQueryValue($include_total_contacts);
-        }
-
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $before_date_created, 'before_date_created');
+        $this->serializeParam($queryParams, $since_date_created, 'since_date_created');
+        $this->serializeParam($queryParams, $before_campaign_last_sent, 'before_campaign_last_sent');
+        $this->serializeParam($queryParams, $since_campaign_last_sent, 'since_campaign_last_sent');
+        $this->serializeParam($queryParams, $email, 'email');
+        $this->serializeParam($queryParams, $sort_field, 'sort_field');
+        $this->serializeParam($queryParams, $sort_dir, 'sort_dir');
+        $this->serializeParam($queryParams, $has_ecommerce_store, 'has_ecommerce_store');
+        $this->serializeParam($queryParams, $include_total_contacts, 'include_total_contacts');
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getList($list_id, $fields = null, $exclude_fields = null, $include_total_contacts = null)
@@ -1295,106 +439,29 @@ class ListsApi
     {
         $request = $this->getListRequest($list_id, $fields, $exclude_fields, $include_total_contacts);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListRequest($list_id, $fields = null, $exclude_fields = null, $include_total_contacts = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
 
-        $resourcePath = '/lists/{list_id}';
+        $resourcePath = self::END_POINT . '/{list_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($include_total_contacts !== null) {
-            $queryParams['include_total_contacts'] = ObjectSerializer::toQueryValue($include_total_contacts);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $include_total_contacts, 'include_total_contacts');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListAbuseReports($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -1406,114 +473,34 @@ class ListsApi
     {
         $request = $this->getListAbuseReportsRequest($list_id, $fields, $exclude_fields, $count, $offset);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListAbuseReportsRequest($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/abuse-reports';
+        $resourcePath = self::END_POINT . '/{list_id}/abuse-reports';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListAbuseReportDetails($list_id, $report_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -1525,126 +512,37 @@ class ListsApi
     {
         $request = $this->getListAbuseReportDetailsRequest($list_id, $report_id, $fields, $exclude_fields, $count, $offset);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListAbuseReportDetailsRequest($list_id, $report_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'report_id' is set
-        if ($report_id === null || (is_array($report_id) && count($report_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $report_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($report_id);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/abuse-reports/{report_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/abuse-reports/{report_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'report_id' . '}',
-            ObjectSerializer::toPathValue($report_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'report_id', $report_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListRecentActivity($list_id, $count = '10', $offset = '0', $fields = null, $exclude_fields = null)
@@ -1656,114 +554,34 @@ class ListsApi
     {
         $request = $this->getListRecentActivityRequest($list_id, $count, $offset, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListRecentActivityRequest($list_id, $count = '10', $offset = '0', $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/activity';
+        $resourcePath = self::END_POINT . '/{list_id}/activity';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListClients($list_id, $fields = null, $exclude_fields = null)
@@ -1775,102 +593,28 @@ class ListsApi
     {
         $request = $this->getListClientsRequest($list_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListClientsRequest($list_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
 
-        $resourcePath = '/lists/{list_id}/clients';
+        $resourcePath = self::END_POINT . '/{list_id}/clients';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListGrowthHistory($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $sort_field = null, $sort_dir = null)
@@ -1882,122 +626,36 @@ class ListsApi
     {
         $request = $this->getListGrowthHistoryRequest($list_id, $fields, $exclude_fields, $count, $offset, $sort_field, $sort_dir);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListGrowthHistoryRequest($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $sort_field = null, $sort_dir = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/growth-history';
+        $resourcePath = self::END_POINT . '/{list_id}/growth-history';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if ($sort_field !== null) {
-            $queryParams['sort_field'] = ObjectSerializer::toQueryValue($sort_field);
-        }
-        // query params
-        if ($sort_dir !== null) {
-            $queryParams['sort_dir'] = ObjectSerializer::toQueryValue($sort_dir);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $sort_field, 'sort_field');
+        $this->serializeParam($queryParams, $sort_dir, 'sort_dir');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListGrowthHistoryByMonth($list_id, $month, $fields = null, $exclude_fields = null)
@@ -2009,114 +667,31 @@ class ListsApi
     {
         $request = $this->getListGrowthHistoryByMonthRequest($list_id, $month, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListGrowthHistoryByMonthRequest($list_id, $month, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'month' is set
-        if ($month === null || (is_array($month) && count($month) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $month when calling '
-            );
-        }
+        $this->checkRequiredParameter($month);
 
-        $resourcePath = '/lists/{list_id}/growth-history/{month}';
+        $resourcePath = self::END_POINT . '/{list_id}/growth-history/{month}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'month' . '}',
-            ObjectSerializer::toPathValue($month),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'month', $month);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListInterestCategories($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $type = null)
@@ -2128,118 +703,35 @@ class ListsApi
     {
         $request = $this->getListInterestCategoriesRequest($list_id, $fields, $exclude_fields, $count, $offset, $type);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListInterestCategoriesRequest($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $type = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/interest-categories';
+        $resourcePath = self::END_POINT . '/{list_id}/interest-categories';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if ($type !== null) {
-            $queryParams['type'] = ObjectSerializer::toQueryValue($type);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $type, 'type');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getInterestCategory($list_id, $interest_category_id, $fields = null, $exclude_fields = null)
@@ -2251,114 +743,31 @@ class ListsApi
     {
         $request = $this->getInterestCategoryRequest($list_id, $interest_category_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getInterestCategoryRequest($list_id, $interest_category_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'interest_category_id' is set
-        if ($interest_category_id === null || (is_array($interest_category_id) && count($interest_category_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_category_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_category_id);
 
-        $resourcePath = '/lists/{list_id}/interest-categories/{interest_category_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/interest-categories/{interest_category_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_category_id' . '}',
-            ObjectSerializer::toPathValue($interest_category_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'interest_category_id', $interest_category_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function listInterestCategoryInterests($list_id, $interest_category_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -2370,126 +779,37 @@ class ListsApi
     {
         $request = $this->listInterestCategoryInterestsRequest($list_id, $interest_category_id, $fields, $exclude_fields, $count, $offset);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function listInterestCategoryInterestsRequest($list_id, $interest_category_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'interest_category_id' is set
-        if ($interest_category_id === null || (is_array($interest_category_id) && count($interest_category_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_category_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_category_id);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/interest-categories/{interest_category_id}/interests';
+        $resourcePath = self::END_POINT . '/{list_id}/interest-categories/{interest_category_id}/interests';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_category_id' . '}',
-            ObjectSerializer::toPathValue($interest_category_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'interest_category_id', $interest_category_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getInterestCategoryInterest($list_id, $interest_category_id, $interest_id, $fields = null, $exclude_fields = null)
@@ -2501,126 +821,34 @@ class ListsApi
     {
         $request = $this->getInterestCategoryInterestRequest($list_id, $interest_category_id, $interest_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getInterestCategoryInterestRequest($list_id, $interest_category_id, $interest_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'interest_category_id' is set
-        if ($interest_category_id === null || (is_array($interest_category_id) && count($interest_category_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_category_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_category_id);
         // verify the required parameter 'interest_id' is set
-        if ($interest_id === null || (is_array($interest_id) && count($interest_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_id);
 
-        $resourcePath = '/lists/{list_id}/interest-categories/{interest_category_id}/interests/{interest_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/interest-categories/{interest_category_id}/interests/{interest_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_category_id' . '}',
-            ObjectSerializer::toPathValue($interest_category_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_id' . '}',
-            ObjectSerializer::toPathValue($interest_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'interest_category_id', $interest_category_id);
+        $this->pathParam($resourcePath, 'interest_id', $interest_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListLocations($list_id, $fields = null, $exclude_fields = null)
@@ -2632,102 +860,28 @@ class ListsApi
     {
         $request = $this->getListLocationsRequest($list_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListLocationsRequest($list_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
 
-        $resourcePath = '/lists/{list_id}/locations';
+        $resourcePath = self::END_POINT . '/{list_id}/locations';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMembersInfo($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $email_type = null, $status = null, $since_timestamp_opt = null, $before_timestamp_opt = null, $since_last_changed = null, $before_last_changed = null, $unique_email_id = null, $vip_only = null, $interest_category_id = null, $interest_ids = null, $interest_match = null, $sort_field = null, $sort_dir = null, $since_last_campaign = null, $unsubscribed_since = null)
@@ -2739,174 +893,49 @@ class ListsApi
     {
         $request = $this->getListMembersInfoRequest($list_id, $fields, $exclude_fields, $count, $offset, $email_type, $status, $since_timestamp_opt, $before_timestamp_opt, $since_last_changed, $before_last_changed, $unique_email_id, $vip_only, $interest_category_id, $interest_ids, $interest_match, $sort_field, $sort_dir, $since_last_campaign, $unsubscribed_since);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMembersInfoRequest($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $email_type = null, $status = null, $since_timestamp_opt = null, $before_timestamp_opt = null, $since_last_changed = null, $before_last_changed = null, $unique_email_id = null, $vip_only = null, $interest_category_id = null, $interest_ids = null, $interest_match = null, $sort_field = null, $sort_dir = null, $since_last_campaign = null, $unsubscribed_since = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/members';
+        $resourcePath = self::END_POINT . '/{list_id}/members';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if ($email_type !== null) {
-            $queryParams['email_type'] = ObjectSerializer::toQueryValue($email_type);
-        }
-        // query params
-        if ($status !== null) {
-            $queryParams['status'] = ObjectSerializer::toQueryValue($status);
-        }
-        // query params
-        if ($since_timestamp_opt !== null) {
-            $queryParams['since_timestamp_opt'] = ObjectSerializer::toQueryValue($since_timestamp_opt);
-        }
-        // query params
-        if ($before_timestamp_opt !== null) {
-            $queryParams['before_timestamp_opt'] = ObjectSerializer::toQueryValue($before_timestamp_opt);
-        }
-        // query params
-        if ($since_last_changed !== null) {
-            $queryParams['since_last_changed'] = ObjectSerializer::toQueryValue($since_last_changed);
-        }
-        // query params
-        if ($before_last_changed !== null) {
-            $queryParams['before_last_changed'] = ObjectSerializer::toQueryValue($before_last_changed);
-        }
-        // query params
-        if ($unique_email_id !== null) {
-            $queryParams['unique_email_id'] = ObjectSerializer::toQueryValue($unique_email_id);
-        }
-        // query params
-        if ($vip_only !== null) {
-            $queryParams['vip_only'] = ObjectSerializer::toQueryValue($vip_only);
-        }
-        // query params
-        if ($interest_category_id !== null) {
-            $queryParams['interest_category_id'] = ObjectSerializer::toQueryValue($interest_category_id);
-        }
-        // query params
-        if ($interest_ids !== null) {
-            $queryParams['interest_ids'] = ObjectSerializer::toQueryValue($interest_ids);
-        }
-        // query params
-        if ($interest_match !== null) {
-            $queryParams['interest_match'] = ObjectSerializer::toQueryValue($interest_match);
-        }
-        // query params
-        if ($sort_field !== null) {
-            $queryParams['sort_field'] = ObjectSerializer::toQueryValue($sort_field);
-        }
-        // query params
-        if ($sort_dir !== null) {
-            $queryParams['sort_dir'] = ObjectSerializer::toQueryValue($sort_dir);
-        }
-        // query params
-        if ($since_last_campaign !== null) {
-            $queryParams['since_last_campaign'] = ObjectSerializer::toQueryValue($since_last_campaign);
-        }
-        // query params
-        if ($unsubscribed_since !== null) {
-            $queryParams['unsubscribed_since'] = ObjectSerializer::toQueryValue($unsubscribed_since);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $email_type, 'email_type');
+        $this->serializeParam($queryParams, $status, 'status');
+        $this->serializeParam($queryParams, $since_timestamp_opt, 'since_timestamp_opt');
+        $this->serializeParam($queryParams, $before_timestamp_opt, 'before_timestamp_opt');
+        $this->serializeParam($queryParams, $since_last_changed, 'since_last_changed');
+        $this->serializeParam($queryParams, $before_last_changed, 'before_last_changed');
+        $this->serializeParam($queryParams, $unique_email_id, 'unique_email_id');
+        $this->serializeParam($queryParams, $vip_only, 'vip_only');
+        $this->serializeParam($queryParams, $interest_category_id, 'interest_category_id');
+        $this->serializeParam($queryParams, $interest_ids, 'interest_ids');
+        $this->serializeParam($queryParams, $interest_match, 'interest_match');
+        $this->serializeParam($queryParams, $sort_field, 'sort_field');
+        $this->serializeParam($queryParams, $sort_dir, 'sort_dir');
+        $this->serializeParam($queryParams, $since_last_campaign, 'since_last_campaign');
+        $this->serializeParam($queryParams, $unsubscribed_since, 'unsubscribed_since');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMember($list_id, $subscriber_hash, $fields = null, $exclude_fields = null)
@@ -2918,114 +947,31 @@ class ListsApi
     {
         $request = $this->getListMemberRequest($list_id, $subscriber_hash, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMemberRequest($list_id, $subscriber_hash, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMemberActivity($list_id, $subscriber_hash, $fields = null, $exclude_fields = null, $action = null)
@@ -3037,121 +983,32 @@ class ListsApi
     {
         $request = $this->getListMemberActivityRequest($list_id, $subscriber_hash, $fields, $exclude_fields, $action);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMemberActivityRequest($list_id, $subscriber_hash, $fields = null, $exclude_fields = null, $action = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/activity';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/activity';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if (is_array($action)) {
-            $queryParams['action'] = ObjectSerializer::serializeCollection($action, 'csv');
-        } else
-        if ($action !== null) {
-            $queryParams['action'] = ObjectSerializer::toQueryValue($action);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $action, 'action');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMemberActivityFeed($list_id, $subscriber_hash, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $activity_filters = null)
@@ -3163,133 +1020,38 @@ class ListsApi
     {
         $request = $this->getListMemberActivityFeedRequest($list_id, $subscriber_hash, $fields, $exclude_fields, $count, $offset, $activity_filters);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMemberActivityFeedRequest($list_id, $subscriber_hash, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $activity_filters = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/activity-feed';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/activity-feed';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if (is_array($activity_filters)) {
-            $queryParams['activity_filters'] = ObjectSerializer::serializeCollection($activity_filters, 'csv');
-        } else
-        if ($activity_filters !== null) {
-            $queryParams['activity_filters'] = ObjectSerializer::toQueryValue($activity_filters);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $activity_filters, 'activity_filters');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMemberEvents($list_id, $subscriber_hash, $count = '10', $offset = '0', $fields = null, $exclude_fields = null)
@@ -3301,126 +1063,37 @@ class ListsApi
     {
         $request = $this->getListMemberEventsRequest($list_id, $subscriber_hash, $count, $offset, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMemberEventsRequest($list_id, $subscriber_hash, $count = '10', $offset = '0', $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/events';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/events';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMemberGoals($list_id, $subscriber_hash, $fields = null, $exclude_fields = null)
@@ -3432,114 +1105,31 @@ class ListsApi
     {
         $request = $this->getListMemberGoalsRequest($list_id, $subscriber_hash, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMemberGoalsRequest($list_id, $subscriber_hash, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/goals';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/goals';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMemberNotes($list_id, $subscriber_hash, $sort_field = null, $sort_dir = null, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -3551,134 +1141,39 @@ class ListsApi
     {
         $request = $this->getListMemberNotesRequest($list_id, $subscriber_hash, $sort_field, $sort_dir, $fields, $exclude_fields, $count, $offset);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMemberNotesRequest($list_id, $subscriber_hash, $sort_field = null, $sort_dir = null, $fields = null, $exclude_fields = null, $count = '10', $offset = '0'): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/notes';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/notes';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if ($sort_field !== null) {
-            $queryParams['sort_field'] = ObjectSerializer::toQueryValue($sort_field);
-        }
-        // query params
-        if ($sort_dir !== null) {
-            $queryParams['sort_dir'] = ObjectSerializer::toQueryValue($sort_dir);
-        }
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
+        
+        $this->serializeParam($queryParams, $sort_field, 'sort_field');
+        $this->serializeParam($queryParams, $sort_dir, 'sort_dir');
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMemberNote($list_id, $subscriber_hash, $note_id, $fields = null, $exclude_fields = null)
@@ -3690,126 +1185,34 @@ class ListsApi
     {
         $request = $this->getListMemberNoteRequest($list_id, $subscriber_hash, $note_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMemberNoteRequest($list_id, $subscriber_hash, $note_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         // verify the required parameter 'note_id' is set
-        if ($note_id === null || (is_array($note_id) && count($note_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $note_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($note_id);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/notes/{note_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/notes/{note_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'note_id' . '}',
-            ObjectSerializer::toPathValue($note_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
+        $this->pathParam($resourcePath, 'note_id', $note_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMergeFields($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $type = null, $required = null)
@@ -3821,122 +1224,36 @@ class ListsApi
     {
         $request = $this->getListMergeFieldsRequest($list_id, $fields, $exclude_fields, $count, $offset, $type, $required);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMergeFieldsRequest($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $type = null, $required = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/merge-fields';
+        $resourcePath = self::END_POINT . '/{list_id}/merge-fields';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if ($type !== null) {
-            $queryParams['type'] = ObjectSerializer::toQueryValue($type);
-        }
-        // query params
-        if ($required !== null) {
-            $queryParams['required'] = ObjectSerializer::toQueryValue($required);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $type, 'type');
+        $this->serializeParam($queryParams, $required, 'required');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListMergeField($list_id, $merge_id, $exclude_fields = null, $fields = null)
@@ -3948,114 +1265,31 @@ class ListsApi
     {
         $request = $this->getListMergeFieldRequest($list_id, $merge_id, $exclude_fields, $fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListMergeFieldRequest($list_id, $merge_id, $exclude_fields = null, $fields = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'merge_id' is set
-        if ($merge_id === null || (is_array($merge_id) && count($merge_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $merge_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($merge_id);
 
-        $resourcePath = '/lists/{list_id}/merge-fields/{merge_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/merge-fields/{merge_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
+        
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $fields, 'fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'merge_id' . '}',
-            ObjectSerializer::toPathValue($merge_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'merge_id', $merge_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getSegment($list_id, $segment_id, $fields = null, $exclude_fields = null, $include_cleaned = null, $include_transactional = null, $include_unsubscribed = null)
@@ -4067,126 +1301,34 @@ class ListsApi
     {
         $request = $this->getSegmentRequest($list_id, $segment_id, $fields, $exclude_fields, $include_cleaned, $include_transactional, $include_unsubscribed);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getSegmentRequest($list_id, $segment_id, $fields = null, $exclude_fields = null, $include_cleaned = null, $include_transactional = null, $include_unsubscribed = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'segment_id' is set
-        if ($segment_id === null || (is_array($segment_id) && count($segment_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $segment_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($segment_id);
 
-        $resourcePath = '/lists/{list_id}/segments/{segment_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/segments/{segment_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($include_cleaned !== null) {
-            $queryParams['include_cleaned'] = ObjectSerializer::toQueryValue($include_cleaned);
-        }
-        // query params
-        if ($include_transactional !== null) {
-            $queryParams['include_transactional'] = ObjectSerializer::toQueryValue($include_transactional);
-        }
-        // query params
-        if ($include_unsubscribed !== null) {
-            $queryParams['include_unsubscribed'] = ObjectSerializer::toQueryValue($include_unsubscribed);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $include_cleaned, 'include_cleaned');
+        $this->serializeParam($queryParams, $include_transactional, 'include_transactional');
+        $this->serializeParam($queryParams, $include_unsubscribed, 'include_unsubscribed');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'segment_id' . '}',
-            ObjectSerializer::toPathValue($segment_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'segment_id', $segment_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getSegmentMembersList($list_id, $segment_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $include_cleaned = null, $include_transactional = null, $include_unsubscribed = null)
@@ -4198,138 +1340,40 @@ class ListsApi
     {
         $request = $this->getSegmentMembersListRequest($list_id, $segment_id, $fields, $exclude_fields, $count, $offset, $include_cleaned, $include_transactional, $include_unsubscribed);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getSegmentMembersListRequest($list_id, $segment_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $include_cleaned = null, $include_transactional = null, $include_unsubscribed = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'segment_id' is set
-        if ($segment_id === null || (is_array($segment_id) && count($segment_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $segment_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($segment_id);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/segments/{segment_id}/members';
+        $resourcePath = self::END_POINT . '/{list_id}/segments/{segment_id}/members';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if ($include_cleaned !== null) {
-            $queryParams['include_cleaned'] = ObjectSerializer::toQueryValue($include_cleaned);
-        }
-        // query params
-        if ($include_transactional !== null) {
-            $queryParams['include_transactional'] = ObjectSerializer::toQueryValue($include_transactional);
-        }
-        // query params
-        if ($include_unsubscribed !== null) {
-            $queryParams['include_unsubscribed'] = ObjectSerializer::toQueryValue($include_unsubscribed);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $include_cleaned, 'include_cleaned');
+        $this->serializeParam($queryParams, $include_transactional, 'include_transactional');
+        $this->serializeParam($queryParams, $include_unsubscribed, 'include_unsubscribed');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'segment_id' . '}',
-            ObjectSerializer::toPathValue($segment_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'segment_id', $segment_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListSignupForms($list_id)
@@ -4341,88 +1385,25 @@ class ListsApi
     {
         $request = $this->getListSignupFormsRequest($list_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListSignupFormsRequest($list_id): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
 
-        $resourcePath = '/lists/{list_id}/signup-forms';
+        $resourcePath = self::END_POINT . '/{list_id}/signup-forms';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListWebhooks($list_id)
@@ -4434,88 +1415,25 @@ class ListsApi
     {
         $request = $this->getListWebhooksRequest($list_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListWebhooksRequest($list_id): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
 
-        $resourcePath = '/lists/{list_id}/webhooks';
+        $resourcePath = self::END_POINT . '/{list_id}/webhooks';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getListWebhook($list_id, $webhook_id)
@@ -4527,100 +1445,28 @@ class ListsApi
     {
         $request = $this->getListWebhookRequest($list_id, $webhook_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getListWebhookRequest($list_id, $webhook_id): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'webhook_id' is set
-        if ($webhook_id === null || (is_array($webhook_id) && count($webhook_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $webhook_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($webhook_id);
 
-        $resourcePath = '/lists/{list_id}/webhooks/{webhook_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/webhooks/{webhook_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'webhook_id' . '}',
-            ObjectSerializer::toPathValue($webhook_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'webhook_id', $webhook_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateList($list_id, $body)
@@ -4632,110 +1478,30 @@ class ListsApi
     {
         $request = $this->updateListRequest($list_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateListRequest($list_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}';
+        $resourcePath = self::END_POINT . '/{list_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateInterestCategory($list_id, $interest_category_id, $body)
@@ -4747,122 +1513,33 @@ class ListsApi
     {
         $request = $this->updateInterestCategoryRequest($list_id, $interest_category_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateInterestCategoryRequest($list_id, $interest_category_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'interest_category_id' is set
-        if ($interest_category_id === null || (is_array($interest_category_id) && count($interest_category_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_category_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_category_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/interest-categories/{interest_category_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/interest-categories/{interest_category_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_category_id' . '}',
-            ObjectSerializer::toPathValue($interest_category_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'interest_category_id', $interest_category_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateInterestCategoryInterest($list_id, $interest_category_id, $interest_id, $body)
@@ -4874,134 +1551,36 @@ class ListsApi
     {
         $request = $this->updateInterestCategoryInterestRequest($list_id, $interest_category_id, $interest_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateInterestCategoryInterestRequest($list_id, $interest_category_id, $interest_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'interest_category_id' is set
-        if ($interest_category_id === null || (is_array($interest_category_id) && count($interest_category_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_category_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_category_id);
         // verify the required parameter 'interest_id' is set
-        if ($interest_id === null || (is_array($interest_id) && count($interest_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/interest-categories/{interest_category_id}/interests/{interest_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/interest-categories/{interest_category_id}/interests/{interest_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_category_id' . '}',
-            ObjectSerializer::toPathValue($interest_category_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_id' . '}',
-            ObjectSerializer::toPathValue($interest_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'interest_category_id', $interest_category_id);
+        $this->pathParam($resourcePath, 'interest_id', $interest_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateListMember($list_id, $subscriber_hash, $body, $skip_merge_validation = null)
@@ -5013,126 +1592,34 @@ class ListsApi
     {
         $request = $this->updateListMemberRequest($list_id, $subscriber_hash, $body, $skip_merge_validation);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateListMemberRequest($list_id, $subscriber_hash, $body, $skip_merge_validation = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}';
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
-        // query params
-        if ($skip_merge_validation !== null) {
-            $queryParams['skip_merge_validation'] = ObjectSerializer::toQueryValue($skip_merge_validation);
-        }
+        
+        $this->serializeParam($queryParams, $skip_merge_validation, 'skip_merge_validation');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateListMemberNote($list_id, $subscriber_hash, $note_id, $body)
@@ -5144,134 +1631,36 @@ class ListsApi
     {
         $request = $this->updateListMemberNoteRequest($list_id, $subscriber_hash, $note_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateListMemberNoteRequest($list_id, $subscriber_hash, $note_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         // verify the required parameter 'note_id' is set
-        if ($note_id === null || (is_array($note_id) && count($note_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $note_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($note_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/notes/{note_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/notes/{note_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'note_id' . '}',
-            ObjectSerializer::toPathValue($note_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
+        $this->pathParam($resourcePath, 'note_id', $note_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateListMergeField($list_id, $merge_id, $body)
@@ -5283,122 +1672,33 @@ class ListsApi
     {
         $request = $this->updateListMergeFieldRequest($list_id, $merge_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateListMergeFieldRequest($list_id, $merge_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'merge_id' is set
-        if ($merge_id === null || (is_array($merge_id) && count($merge_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $merge_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($merge_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/merge-fields/{merge_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/merge-fields/{merge_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'merge_id' . '}',
-            ObjectSerializer::toPathValue($merge_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'merge_id', $merge_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateSegment($list_id, $segment_id, $body)
@@ -5410,122 +1710,33 @@ class ListsApi
     {
         $request = $this->updateSegmentRequest($list_id, $segment_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateSegmentRequest($list_id, $segment_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'segment_id' is set
-        if ($segment_id === null || (is_array($segment_id) && count($segment_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $segment_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($segment_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/segments/{segment_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/segments/{segment_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'segment_id' . '}',
-            ObjectSerializer::toPathValue($segment_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'segment_id', $segment_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateListWebhook($list_id, $webhook_id, $body)
@@ -5537,122 +1748,33 @@ class ListsApi
     {
         $request = $this->updateListWebhookRequest($list_id, $webhook_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateListWebhookRequest($list_id, $webhook_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'webhook_id' is set
-        if ($webhook_id === null || (is_array($webhook_id) && count($webhook_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $webhook_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($webhook_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/webhooks/{webhook_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/webhooks/{webhook_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'webhook_id' . '}',
-            ObjectSerializer::toPathValue($webhook_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'webhook_id', $webhook_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function createListMemberEvent($list_id, $subscriber_hash, $body)
@@ -5664,122 +1786,33 @@ class ListsApi
     {
         $request = $this->createListMemberEventRequest($list_id, $subscriber_hash, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createListMemberEventRequest($list_id, $subscriber_hash, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/events';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/events';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateListMemberTags($list_id, $subscriber_hash, $body)
@@ -5791,122 +1824,33 @@ class ListsApi
     {
         $request = $this->updateListMemberTagsRequest($list_id, $subscriber_hash, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateListMemberTagsRequest($list_id, $subscriber_hash, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/tags';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/tags';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function createList($body)
@@ -5919,98 +1863,26 @@ class ListsApi
     {
         $request = $this->createListRequest($body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createListRequest($body): Request
     {
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function batchListMembers($list_id, $body, $skip_merge_validation = null, $skip_duplicate_check = null)
@@ -6022,118 +1894,32 @@ class ListsApi
     {
         $request = $this->batchListMembersRequest($list_id, $body, $skip_merge_validation, $skip_duplicate_check);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function batchListMembersRequest($list_id, $body, $skip_merge_validation = null, $skip_duplicate_check = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}';
+        $resourcePath = self::END_POINT . '/{list_id}';
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
-        // query params
-        if ($skip_merge_validation !== null) {
-            $queryParams['skip_merge_validation'] = ObjectSerializer::toQueryValue($skip_merge_validation);
-        }
-        // query params
-        if ($skip_duplicate_check !== null) {
-            $queryParams['skip_duplicate_check'] = ObjectSerializer::toQueryValue($skip_duplicate_check);
-        }
+        
+        $this->serializeParam($queryParams, $skip_merge_validation, 'skip_merge_validation');
+        $this->serializeParam($queryParams, $skip_duplicate_check, 'skip_duplicate_check');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function createListInterestCategory($list_id, $body)
@@ -6145,110 +1931,30 @@ class ListsApi
     {
         $request = $this->createListInterestCategoryRequest($list_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createListInterestCategoryRequest($list_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/interest-categories';
+        $resourcePath = self::END_POINT . '/{list_id}/interest-categories';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function createInterestCategoryInterest($list_id, $interest_category_id, $body)
@@ -6260,122 +1966,33 @@ class ListsApi
     {
         $request = $this->createInterestCategoryInterestRequest($list_id, $interest_category_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createInterestCategoryInterestRequest($list_id, $interest_category_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'interest_category_id' is set
-        if ($interest_category_id === null || (is_array($interest_category_id) && count($interest_category_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $interest_category_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($interest_category_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/interest-categories/{interest_category_id}/interests';
+        $resourcePath = self::END_POINT . '/{list_id}/interest-categories/{interest_category_id}/interests';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'interest_category_id' . '}',
-            ObjectSerializer::toPathValue($interest_category_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'interest_category_id', $interest_category_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function addListMember($list_id, $body, $skip_merge_validation = null)
@@ -6387,114 +2004,31 @@ class ListsApi
     {
         $request = $this->addListMemberRequest($list_id, $body, $skip_merge_validation);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function addListMemberRequest($list_id, $body, $skip_merge_validation = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/members';
+        $resourcePath = self::END_POINT . '/{list_id}/members';
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
-        // query params
-        if ($skip_merge_validation !== null) {
-            $queryParams['skip_merge_validation'] = ObjectSerializer::toQueryValue($skip_merge_validation);
-        }
+        
+        $this->serializeParam($queryParams, $skip_merge_validation, 'skip_merge_validation');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function deleteListMemberPermanent($list_id, $subscriber_hash)
@@ -6506,100 +2040,28 @@ class ListsApi
     {
         $request = $this->deleteListMemberPermanentRequest($list_id, $subscriber_hash);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteListMemberPermanentRequest($list_id, $subscriber_hash): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/actions/delete-permanent';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/actions/delete-permanent';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function createListMemberNote($list_id, $subscriber_hash, $body)
@@ -6611,122 +2073,33 @@ class ListsApi
     {
         $request = $this->createListMemberNoteRequest($list_id, $subscriber_hash, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createListMemberNoteRequest($list_id, $subscriber_hash, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}/notes';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}/notes';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function addListMergeField($list_id, $body)
@@ -6738,110 +2111,30 @@ class ListsApi
     {
         $request = $this->addListMergeFieldRequest($list_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function addListMergeFieldRequest($list_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/merge-fields';
+        $resourcePath = self::END_POINT . '/{list_id}/merge-fields';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function createSegment($list_id, $body)
@@ -6853,110 +2146,30 @@ class ListsApi
     {
         $request = $this->createSegmentRequest($list_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createSegmentRequest($list_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/segments';
+        $resourcePath = self::END_POINT . '/{list_id}/segments';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function batchSegmentMembers($body, $list_id, $segment_id)
@@ -6968,122 +2181,33 @@ class ListsApi
     {
         $request = $this->batchSegmentMembersRequest($body, $list_id, $segment_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function batchSegmentMembersRequest($body, $list_id, $segment_id): Request
     {
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'segment_id' is set
-        if ($segment_id === null || (is_array($segment_id) && count($segment_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $segment_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($segment_id);
 
-        $resourcePath = '/lists/{list_id}/segments/{segment_id}';
+        $resourcePath = self::END_POINT . '/{list_id}/segments/{segment_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'segment_id' . '}',
-            ObjectSerializer::toPathValue($segment_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'segment_id', $segment_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function createSegmentMember($list_id, $segment_id, $body)
@@ -7095,121 +2219,33 @@ class ListsApi
     {
         $request = $this->createSegmentMemberRequest($list_id, $segment_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createSegmentMemberRequest($list_id, $segment_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'segment_id' is set
-        if ($segment_id === null || (is_array($segment_id) && count($segment_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $segment_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($segment_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/segments/{segment_id}/members';
+        $resourcePath = self::END_POINT . '/{list_id}/segments/{segment_id}/members';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'segment_id' . '}',
-            ObjectSerializer::toPathValue($segment_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'segment_id', $segment_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateListSignupForm($list_id, $body)
@@ -7221,110 +2257,30 @@ class ListsApi
     {
         $request = $this->updateListSignupFormRequest($list_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateListSignupFormRequest($list_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/signup-forms';
+        $resourcePath = self::END_POINT . '/{list_id}/signup-forms';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function createListWebhook($list_id, $body)
@@ -7336,110 +2292,30 @@ class ListsApi
     {
         $request = $this->createListWebhookRequest($list_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createListWebhookRequest($list_id, $body): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/webhooks';
+        $resourcePath = self::END_POINT . '/{list_id}/webhooks';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function listSegments($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $type = null, $since_created_at = null, $before_created_at = null, $include_cleaned = null, $include_transactional = null, $include_unsubscribed = null, $since_updated_at = null, $before_updated_at = null)
@@ -7451,146 +2327,42 @@ class ListsApi
     {
         $request = $this->listSegmentsRequest($list_id, $fields, $exclude_fields, $count, $offset, $type, $since_created_at, $before_created_at, $include_cleaned, $include_transactional, $include_unsubscribed, $since_updated_at, $before_updated_at);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function listSegmentsRequest($list_id, $fields = null, $exclude_fields = null, $count = '10', $offset = '0', $type = null, $since_created_at = null, $before_created_at = null, $include_cleaned = null, $include_transactional = null, $include_unsubscribed = null, $since_updated_at = null, $before_updated_at = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         if ($count !== null && $count > 1000) {
             throw new InvalidArgumentException('invalid value for "$count" when calling ListsApi., must be smaller than or equal to 1000.');
         }
 
 
-        $resourcePath = '/lists/{list_id}/segments';
+        $resourcePath = self::END_POINT . '/{list_id}/segments';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if ($type !== null) {
-            $queryParams['type'] = ObjectSerializer::toQueryValue($type);
-        }
-        // query params
-        if ($since_created_at !== null) {
-            $queryParams['since_created_at'] = ObjectSerializer::toQueryValue($since_created_at);
-        }
-        // query params
-        if ($before_created_at !== null) {
-            $queryParams['before_created_at'] = ObjectSerializer::toQueryValue($before_created_at);
-        }
-        // query params
-        if ($include_cleaned !== null) {
-            $queryParams['include_cleaned'] = ObjectSerializer::toQueryValue($include_cleaned);
-        }
-        // query params
-        if ($include_transactional !== null) {
-            $queryParams['include_transactional'] = ObjectSerializer::toQueryValue($include_transactional);
-        }
-        // query params
-        if ($include_unsubscribed !== null) {
-            $queryParams['include_unsubscribed'] = ObjectSerializer::toQueryValue($include_unsubscribed);
-        }
-        // query params
-        if ($since_updated_at !== null) {
-            $queryParams['since_updated_at'] = ObjectSerializer::toQueryValue($since_updated_at);
-        }
-        // query params
-        if ($before_updated_at !== null) {
-            $queryParams['before_updated_at'] = ObjectSerializer::toQueryValue($before_updated_at);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $type, 'type');
+        $this->serializeParam($queryParams, $since_created_at, 'since_created_at');
+        $this->serializeParam($queryParams, $before_created_at, 'before_created_at');
+        $this->serializeParam($queryParams, $include_cleaned, 'include_cleaned');
+        $this->serializeParam($queryParams, $include_transactional, 'include_transactional');
+        $this->serializeParam($queryParams, $include_unsubscribed, 'include_unsubscribed');
+        $this->serializeParam($queryParams, $since_updated_at, 'since_updated_at');
+        $this->serializeParam($queryParams, $before_updated_at, 'before_updated_at');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function setListMember($list_id, $subscriber_hash, $body, $skip_merge_validation = null)
@@ -7602,126 +2374,34 @@ class ListsApi
     {
         $request = $this->setListMemberRequest($list_id, $subscriber_hash, $body, $skip_merge_validation);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function setListMemberRequest($list_id, $subscriber_hash, $body, $skip_merge_validation = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/lists/{list_id}/members/{subscriber_hash}';
+        $resourcePath = self::END_POINT . '/{list_id}/members/{subscriber_hash}';
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
-        // query params
-        if ($skip_merge_validation !== null) {
-            $queryParams['skip_merge_validation'] = ObjectSerializer::toQueryValue($skip_merge_validation);
-        }
+        
+        $this->serializeParam($queryParams, $skip_merge_validation, 'skip_merge_validation');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PUT',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPut($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function tagSearch($list_id, $name = null)
@@ -7733,91 +2413,26 @@ class ListsApi
     {
         $request = $this->tagSearchRequest($list_id, $name);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function tagSearchRequest($list_id, $name = null): Request
     {
         // verify the required parameter 'list_id' is set
-        if ($list_id === null || (is_array($list_id) && count($list_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $list_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($list_id);
 
-        $resourcePath = '/lists/{list_id}/tag-search';
+        $resourcePath = self::END_POINT . '/{list_id}/tag-search';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if ($name !== null) {
-            $queryParams['name'] = ObjectSerializer::toQueryValue($name);
-        }
+        
+        $this->serializeParam($queryParams, $name, 'name');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'list_id' . '}',
-            ObjectSerializer::toPathValue($list_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'list_id', $list_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 }

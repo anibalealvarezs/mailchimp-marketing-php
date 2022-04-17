@@ -28,6 +28,8 @@
 
 namespace MailchimpMarketing;
 
+use JetBrains\PhpStorm\Pure;
+
 /**
  * ApiException Class Doc Comment
  *
@@ -44,7 +46,7 @@ class HeaderSelector
      * @param string[] $contentTypes
      * @return array
      */
-    public function selectHeaders(array $accept, array $contentTypes): array
+    #[Pure] public function selectHeaders(array $accept, array $contentTypes): array
     {
         $headers = [];
 
@@ -74,7 +76,7 @@ class HeaderSelector
      *
      * @param string[] $accept Array of header
      *
-     * @return string Accept (e.g. application/json)
+     * @return string|null Accept (e.g. application/json)
      */
     private function selectAcceptHeader(array $accept): ?string
     {

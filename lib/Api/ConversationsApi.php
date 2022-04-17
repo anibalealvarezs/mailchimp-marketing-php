@@ -29,17 +29,15 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
-use MailchimpMarketing\ApiException;
 use MailchimpMarketing\ApiTrait;
-use MailchimpMarketing\ObjectSerializer;
-use stdClass;
 
 class ConversationsApi
 {
     use ApiTrait;
+
+    const END_POINT = '/conversations';
 
     public function list($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $has_unread_messages = null, $list_id = null, $campaign_id = null)
     {
@@ -50,30 +48,7 @@ class ConversationsApi
     {
         $request = $this->listRequest($fields, $exclude_fields, $count, $offset, $has_unread_messages, $list_id, $campaign_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function listRequest($fields = null, $exclude_fields = null, $count = '10', $offset = '0', $has_unread_messages = null, $list_id = null, $campaign_id = null): Request
@@ -83,81 +58,23 @@ class ConversationsApi
         }
 
 
-        $resourcePath = '/conversations';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if ($has_unread_messages !== null) {
-            $queryParams['has_unread_messages'] = ObjectSerializer::toQueryValue($has_unread_messages);
-        }
-        // query params
-        if ($list_id !== null) {
-            $queryParams['list_id'] = ObjectSerializer::toQueryValue($list_id);
-        }
-        // query params
-        if ($campaign_id !== null) {
-            $queryParams['campaign_id'] = ObjectSerializer::toQueryValue($campaign_id);
-        }
-
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $has_unread_messages, 'has_unread_messages');
+        $this->serializeParam($queryParams, $list_id, 'list_id');
+        $this->serializeParam($queryParams, $campaign_id, 'campaign_id');
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function get($conversation_id, $fields = null, $exclude_fields = null)
@@ -169,102 +86,28 @@ class ConversationsApi
     {
         $request = $this->getRequest($conversation_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getRequest($conversation_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'conversation_id' is set
-        if ($conversation_id === null || (is_array($conversation_id) && count($conversation_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $conversation_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($conversation_id);
 
-        $resourcePath = '/conversations/{conversation_id}';
+        $resourcePath = self::END_POINT . '/{conversation_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'conversation_id' . '}',
-            ObjectSerializer::toPathValue($conversation_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'conversation_id', $conversation_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getConversationMessages($conversation_id, $fields = null, $exclude_fields = null, $is_read = null, $before_timestamp = null, $since_timestamp = null)
@@ -276,114 +119,31 @@ class ConversationsApi
     {
         $request = $this->getConversationMessagesRequest($conversation_id, $fields, $exclude_fields, $is_read, $before_timestamp, $since_timestamp);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getConversationMessagesRequest($conversation_id, $fields = null, $exclude_fields = null, $is_read = null, $before_timestamp = null, $since_timestamp = null): Request
     {
         // verify the required parameter 'conversation_id' is set
-        if ($conversation_id === null || (is_array($conversation_id) && count($conversation_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $conversation_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($conversation_id);
 
-        $resourcePath = '/conversations/{conversation_id}/messages';
+        $resourcePath = self::END_POINT . '/{conversation_id}/messages';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($is_read !== null) {
-            $queryParams['is_read'] = ObjectSerializer::toQueryValue($is_read);
-        }
-        // query params
-        if ($before_timestamp !== null) {
-            $queryParams['before_timestamp'] = ObjectSerializer::toQueryValue($before_timestamp);
-        }
-        // query params
-        if ($since_timestamp !== null) {
-            $queryParams['since_timestamp'] = ObjectSerializer::toQueryValue($since_timestamp);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $is_read, 'is_read');
+        $this->serializeParam($queryParams, $before_timestamp, 'before_timestamp');
+        $this->serializeParam($queryParams, $since_timestamp, 'since_timestamp');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'conversation_id' . '}',
-            ObjectSerializer::toPathValue($conversation_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'conversation_id', $conversation_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getConversationMessage($conversation_id, $message_id, $fields = null, $exclude_fields = null)
@@ -395,113 +155,30 @@ class ConversationsApi
     {
         $request = $this->getConversationMessageRequest($conversation_id, $message_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getConversationMessageRequest($conversation_id, $message_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'conversation_id' is set
-        if ($conversation_id === null || (is_array($conversation_id) && count($conversation_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $conversation_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($conversation_id);
         // verify the required parameter 'message_id' is set
-        if ($message_id === null || (is_array($message_id) && count($message_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $message_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($message_id);
 
-        $resourcePath = '/conversations/{conversation_id}/messages/{message_id}';
+        $resourcePath = self::END_POINT . '/{conversation_id}/messages/{message_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'conversation_id' . '}',
-            ObjectSerializer::toPathValue($conversation_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'message_id' . '}',
-            ObjectSerializer::toPathValue($message_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'conversation_id', $conversation_id);
+        $this->pathParam($resourcePath, 'message_id', $message_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 }

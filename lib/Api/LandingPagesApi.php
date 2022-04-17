@@ -29,17 +29,15 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
-use MailchimpMarketing\ApiException;
 use MailchimpMarketing\ApiTrait;
-use MailchimpMarketing\ObjectSerializer;
-use stdClass;
 
 class LandingPagesApi
 {
     use ApiTrait;
+
+    const END_POINT = '/landing-pages';
 
     public function deletePage($page_id)
     {
@@ -50,88 +48,25 @@ class LandingPagesApi
     {
         $request = $this->deletePageRequest($page_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deletePageRequest($page_id): Request
     {
         // verify the required parameter 'page_id' is set
-        if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $page_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($page_id);
 
-        $resourcePath = '/landing-pages/{page_id}';
+        $resourcePath = self::END_POINT . '/{page_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'page_id' . '}',
-            ObjectSerializer::toPathValue($page_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'page_id', $page_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getAll($sort_dir = null, $sort_field = null, $fields = null, $exclude_fields = null, $count = '10')
@@ -143,30 +78,7 @@ class LandingPagesApi
     {
         $request = $this->getAllRequest($sort_dir, $sort_field, $fields, $exclude_fields, $count);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getAllRequest($sort_dir = null, $sort_field = null, $fields = null, $exclude_fields = null, $count = '10'): Request
@@ -176,73 +88,21 @@ class LandingPagesApi
         }
 
 
-        $resourcePath = '/landing-pages';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if ($sort_dir !== null) {
-            $queryParams['sort_dir'] = ObjectSerializer::toQueryValue($sort_dir);
-        }
-        // query params
-        if ($sort_field !== null) {
-            $queryParams['sort_field'] = ObjectSerializer::toQueryValue($sort_field);
-        }
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-
+        
+        $this->serializeParam($queryParams, $sort_dir, 'sort_dir');
+        $this->serializeParam($queryParams, $sort_field, 'sort_field');
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $count, 'count');
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getPage($page_id, $fields = null, $exclude_fields = null)
@@ -254,102 +114,28 @@ class LandingPagesApi
     {
         $request = $this->getPageRequest($page_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getPageRequest($page_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'page_id' is set
-        if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $page_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($page_id);
 
-        $resourcePath = '/landing-pages/{page_id}';
+        $resourcePath = self::END_POINT . '/{page_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'page_id' . '}',
-            ObjectSerializer::toPathValue($page_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'page_id', $page_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getPageContent($page_id, $fields = null, $exclude_fields = null)
@@ -361,102 +147,28 @@ class LandingPagesApi
     {
         $request = $this->getPageContentRequest($page_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getPageContentRequest($page_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'page_id' is set
-        if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $page_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($page_id);
 
-        $resourcePath = '/landing-pages/{page_id}/content';
+        $resourcePath = self::END_POINT . '/{page_id}/content';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'page_id' . '}',
-            ObjectSerializer::toPathValue($page_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'page_id', $page_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updatePage($page_id, $body)
@@ -468,110 +180,29 @@ class LandingPagesApi
     {
         $request = $this->updatePageRequest($page_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updatePageRequest($page_id, $body): Request
     {
         // verify the required parameter 'page_id' is set
-        if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $page_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($page_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/landing-pages/{page_id}';
+        $resourcePath = self::END_POINT . '/{page_id}';
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'page_id' . '}',
-            ObjectSerializer::toPathValue($page_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'page_id', $page_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function create($body, $use_default_list = null)
@@ -583,102 +214,27 @@ class LandingPagesApi
     {
         $request = $this->createRequest($body, $use_default_list);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createRequest($body, $use_default_list = null): Request
     {
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/landing-pages';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
-        // query params
-        if ($use_default_list !== null) {
-            $queryParams['use_default_list'] = ObjectSerializer::toQueryValue($use_default_list);
-        }
+        
+        $this->serializeParam($queryParams, $use_default_list, 'use_default_list');
 
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function publishPage($page_id)
@@ -690,88 +246,25 @@ class LandingPagesApi
     {
         $request = $this->publishPageRequest($page_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function publishPageRequest($page_id): Request
     {
         // verify the required parameter 'page_id' is set
-        if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $page_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($page_id);
 
-        $resourcePath = '/landing-pages/{page_id}/actions/publish';
+        $resourcePath = self::END_POINT . '/{page_id}/actions/publish';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'page_id' . '}',
-            ObjectSerializer::toPathValue($page_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'page_id', $page_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function unpublishPage($page_id)
@@ -783,87 +276,24 @@ class LandingPagesApi
     {
         $request = $this->unpublishPageRequest($page_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function unpublishPageRequest($page_id): Request
     {
         // verify the required parameter 'page_id' is set
-        if ($page_id === null || (is_array($page_id) && count($page_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $page_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($page_id);
 
-        $resourcePath = '/landing-pages/{page_id}/actions/unpublish';
+        $resourcePath = self::END_POINT . '/{page_id}/actions/unpublish';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'page_id' . '}',
-            ObjectSerializer::toPathValue($page_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'page_id', $page_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 }

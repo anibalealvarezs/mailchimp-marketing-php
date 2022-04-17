@@ -49,19 +49,45 @@ use MailchimpMarketing\Api\VerifiedDomainsApi;
 
 class Configuration
 {
-    private static $defaultConfiguration;
+    private static Configuration $defaultConfiguration;
 
-    protected $apiKeys = [];
-    protected $apiKeyPrefixes = [];
-    protected $accessToken = '';
-    protected $username = '';
-    protected $password = '';
-    protected $host = 'https://server.api.mailchimp.com/3.0';
-    protected $userAgent = 'Swagger-Codegen/3.0.74/php';
-    protected $debug = false;
-    protected $debugFile = 'php://output';
-    protected $tempFolderPath;
-    protected $timeout = 120;
+    protected array $apiKeys = [];
+    protected array $apiKeyPrefixes = [];
+    protected string $accessToken = '';
+    protected string $username = '';
+    protected string $password = '';
+    protected string $host = 'https://server.api.mailchimp.com/3.0';
+    protected string $userAgent = 'Swagger-Codegen/3.0.74/php';
+    protected bool $debug = false;
+    protected string $debugFile = 'php://output';
+    protected string $tempFolderPath;
+    protected int $timeout = 120;
+    private AccountExportApi $accountExport;
+    private AccountExportsApi $accountExports;
+    private ActivityFeedApi $activityFeed;
+    private AuthorizedAppsApi $authorizedApps;
+    private AutomationsApi $automations;
+    private BatchWebhooksApi $batchWebhooks;
+    private BatchesApi $batches;
+    private CampaignFoldersApi $campaignFolders;
+    private CampaignsApi $campaigns;
+    private ConnectedSitesApi $connectedSites;
+    private ConversationsApi $conversations;
+    private CustomerJourneysApi $customerJourneys;
+    private EcommerceApi $ecommerce;
+    private FacebookAdsApi $facebookAds;
+    private FileManagerApi $fileManager;
+    private LandingPagesApi $landingPages;
+    private ListsApi $lists;
+    private PingApi $ping;
+    private ReportingApi $reporting;
+    private ReportsApi $reports;
+    private RootApi $root;
+    private SearchCampaignsApi $searchCampaigns;
+    private SearchMembersApi $searchMembers;
+    private TemplateFoldersApi $templateFolders;
+    private TemplatesApi $templates;
+    private VerifiedDomainsApi $verifiedDomains;
 
     public function __construct()
     {

@@ -29,6 +29,7 @@
 namespace MailchimpMarketing;
 
 use Exception;
+use JetBrains\PhpStorm\Pure;
 
 /**
  * ApiException Class Doc Comment
@@ -46,21 +47,21 @@ class ApiException extends Exception
      *
      * @var mixed
      */
-    protected $responseBody;
+    protected mixed $responseBody;
 
     /**
      * The HTTP header of the server response.
      *
      * @var string[]|null
      */
-    protected $responseHeaders;
+    protected ?array $responseHeaders;
 
     /**
      * The deserialized response object
      *
      * @var $responseObject;
      */
-    protected $responseObject;
+    protected mixed $responseObject;
 
     /**
      * Constructor
@@ -68,9 +69,9 @@ class ApiException extends Exception
      * @param string        $message         Error message
      * @param int           $code            HTTP status code
      * @param string[]|null $responseHeaders HTTP response header
-     * @param mixed         $responseBody    HTTP decoded body of the server response either as \stdClass or string
+     * @param mixed|null $responseBody    HTTP decoded body of the server response either as \stdClass or string
      */
-    public function __construct($message = "", $code = 0, $responseHeaders = [], $responseBody = null)
+    #[Pure] public function __construct($message = "", $code = 0, $responseHeaders = [], mixed $responseBody = null)
     {
         parent::__construct($message, $code);
         $this->responseHeaders = $responseHeaders;
@@ -92,7 +93,7 @@ class ApiException extends Exception
      *
      * @return mixed HTTP body of the server response either as \stdClass or string
      */
-    public function getResponseBody()
+    public function getResponseBody(): mixed
     {
         return $this->responseBody;
     }

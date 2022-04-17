@@ -29,17 +29,15 @@
 
 namespace MailchimpMarketing\Api;
 
-use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
 use InvalidArgumentException;
-use MailchimpMarketing\ApiException;
 use MailchimpMarketing\ApiTrait;
-use MailchimpMarketing\ObjectSerializer;
-use stdClass;
 
 class AutomationsApi
 {
     use ApiTrait;
+
+    const END_POINT = '/automations';
 
     public function archive($workflow_id)
     {
@@ -50,88 +48,25 @@ class AutomationsApi
     {
         $request = $this->archiveRequest($workflow_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function archiveRequest($workflow_id): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
 
-        $resourcePath = '/automations/{workflow_id}/actions/archive';
+        $resourcePath = self::END_POINT . '/{workflow_id}/actions/archive';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function deleteWorkflowEmail($workflow_id, $workflow_email_id)
@@ -143,100 +78,28 @@ class AutomationsApi
     {
         $request = $this->deleteWorkflowEmailRequest($workflow_id, $workflow_email_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function deleteWorkflowEmailRequest($workflow_id, $workflow_email_id): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
         // verify the required parameter 'workflow_email_id' is set
-        if ($workflow_email_id === null || (is_array($workflow_email_id) && count($workflow_email_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_email_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_email_id);
 
-        $resourcePath = '/automations/{workflow_id}/emails/{workflow_email_id}';
+        $resourcePath = self::END_POINT . '/{workflow_id}/emails/{workflow_email_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_email_id' . '}',
-            ObjectSerializer::toPathValue($workflow_email_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
+        $this->pathParam($resourcePath, 'workflow_email_id', $workflow_email_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'DELETE',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestDelete($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function list($count = '10', $offset = '0', $fields = null, $exclude_fields = null, $before_create_time = null, $since_create_time = null, $before_start_time = null, $since_start_time = null, $status = null)
@@ -248,30 +111,7 @@ class AutomationsApi
     {
         $request = $this->listRequest($count, $offset, $fields, $exclude_fields, $before_create_time, $since_create_time, $before_start_time, $since_start_time, $status);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function listRequest($count = '10', $offset = '0', $fields = null, $exclude_fields = null, $before_create_time = null, $since_create_time = null, $before_start_time = null, $since_start_time = null, $status = null): Request
@@ -281,89 +121,25 @@ class AutomationsApi
         }
 
 
-        $resourcePath = '/automations';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if ($count !== null) {
-            $queryParams['count'] = ObjectSerializer::toQueryValue($count);
-        }
-        // query params
-        if ($offset !== null) {
-            $queryParams['offset'] = ObjectSerializer::toQueryValue($offset);
-        }
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($before_create_time !== null) {
-            $queryParams['before_create_time'] = ObjectSerializer::toQueryValue($before_create_time);
-        }
-        // query params
-        if ($since_create_time !== null) {
-            $queryParams['since_create_time'] = ObjectSerializer::toQueryValue($since_create_time);
-        }
-        // query params
-        if ($before_start_time !== null) {
-            $queryParams['before_start_time'] = ObjectSerializer::toQueryValue($before_start_time);
-        }
-        // query params
-        if ($since_start_time !== null) {
-            $queryParams['since_start_time'] = ObjectSerializer::toQueryValue($since_start_time);
-        }
-        // query params
-        if ($status !== null) {
-            $queryParams['status'] = ObjectSerializer::toQueryValue($status);
-        }
-
+        
+        $this->serializeParam($queryParams, $count, 'count');
+        $this->serializeParam($queryParams, $offset, 'offset');
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
+        $this->serializeParam($queryParams, $before_create_time, 'before_create_time');
+        $this->serializeParam($queryParams, $since_create_time, 'since_create_time');
+        $this->serializeParam($queryParams, $before_start_time, 'before_start_time');
+        $this->serializeParam($queryParams, $since_start_time, 'since_start_time');
+        $this->serializeParam($queryParams, $status, 'status');
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function get($workflow_id, $fields = null, $exclude_fields = null)
@@ -375,102 +151,28 @@ class AutomationsApi
     {
         $request = $this->getRequest($workflow_id, $fields, $exclude_fields);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getRequest($workflow_id, $fields = null, $exclude_fields = null): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
 
-        $resourcePath = '/automations/{workflow_id}';
+        $resourcePath = self::END_POINT . '/{workflow_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
+        
+        $this->serializeParam($queryParams, $fields, 'fields');
+        $this->serializeParam($queryParams, $exclude_fields, 'exclude_fields');
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function listAllWorkflowEmails($workflow_id)
@@ -482,88 +184,25 @@ class AutomationsApi
     {
         $request = $this->listAllWorkflowEmailsRequest($workflow_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function listAllWorkflowEmailsRequest($workflow_id): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
 
-        $resourcePath = '/automations/{workflow_id}/emails';
+        $resourcePath = self::END_POINT . '/{workflow_id}/emails';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getWorkflowEmail($workflow_id, $workflow_email_id)
@@ -575,100 +214,28 @@ class AutomationsApi
     {
         $request = $this->getWorkflowEmailRequest($workflow_id, $workflow_email_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getWorkflowEmailRequest($workflow_id, $workflow_email_id): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
         // verify the required parameter 'workflow_email_id' is set
-        if ($workflow_email_id === null || (is_array($workflow_email_id) && count($workflow_email_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_email_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_email_id);
 
-        $resourcePath = '/automations/{workflow_id}/emails/{workflow_email_id}';
+        $resourcePath = self::END_POINT . '/{workflow_id}/emails/{workflow_email_id}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_email_id' . '}',
-            ObjectSerializer::toPathValue($workflow_email_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
+        $this->pathParam($resourcePath, 'workflow_email_id', $workflow_email_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getWorkflowEmailSubscriberQueue($workflow_id, $workflow_email_id)
@@ -680,100 +247,28 @@ class AutomationsApi
     {
         $request = $this->getWorkflowEmailSubscriberQueueRequest($workflow_id, $workflow_email_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getWorkflowEmailSubscriberQueueRequest($workflow_id, $workflow_email_id): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
         // verify the required parameter 'workflow_email_id' is set
-        if ($workflow_email_id === null || (is_array($workflow_email_id) && count($workflow_email_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_email_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_email_id);
 
-        $resourcePath = '/automations/{workflow_id}/emails/{workflow_email_id}/queue';
+        $resourcePath = self::END_POINT . '/{workflow_id}/emails/{workflow_email_id}/queue';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_email_id' . '}',
-            ObjectSerializer::toPathValue($workflow_email_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
+        $this->pathParam($resourcePath, 'workflow_email_id', $workflow_email_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getWorkflowEmailSubscriber($workflow_id, $workflow_email_id, $subscriber_hash)
@@ -785,112 +280,31 @@ class AutomationsApi
     {
         $request = $this->getWorkflowEmailSubscriberRequest($workflow_id, $workflow_email_id, $subscriber_hash);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getWorkflowEmailSubscriberRequest($workflow_id, $workflow_email_id, $subscriber_hash): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
         // verify the required parameter 'workflow_email_id' is set
-        if ($workflow_email_id === null || (is_array($workflow_email_id) && count($workflow_email_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_email_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_email_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
 
-        $resourcePath = '/automations/{workflow_id}/emails/{workflow_email_id}/queue/{subscriber_hash}';
+        $resourcePath = self::END_POINT . '/{workflow_id}/emails/{workflow_email_id}/queue/{subscriber_hash}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_email_id' . '}',
-            ObjectSerializer::toPathValue($workflow_email_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
+        $this->pathParam($resourcePath, 'workflow_email_id', $workflow_email_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function listWorkflowEmailSubscribersRemoved($workflow_id)
@@ -902,88 +316,25 @@ class AutomationsApi
     {
         $request = $this->listWorkflowEmailSubscribersRemovedRequest($workflow_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function listWorkflowEmailSubscribersRemovedRequest($workflow_id): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
 
-        $resourcePath = '/automations/{workflow_id}/removed-subscribers';
+        $resourcePath = self::END_POINT . '/{workflow_id}/removed-subscribers';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function getRemovedWorkflowEmailSubscriber($workflow_id, $subscriber_hash)
@@ -995,100 +346,28 @@ class AutomationsApi
     {
         $request = $this->getRemovedWorkflowEmailSubscriberRequest($workflow_id, $subscriber_hash);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function getRemovedWorkflowEmailSubscriberRequest($workflow_id, $subscriber_hash): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
         // verify the required parameter 'subscriber_hash' is set
-        if ($subscriber_hash === null || (is_array($subscriber_hash) && count($subscriber_hash) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $subscriber_hash when calling '
-            );
-        }
+        $this->checkRequiredParameter($subscriber_hash);
 
-        $resourcePath = '/automations/{workflow_id}/removed-subscribers/{subscriber_hash}';
+        $resourcePath = self::END_POINT . '/{workflow_id}/removed-subscribers/{subscriber_hash}';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'subscriber_hash' . '}',
-            ObjectSerializer::toPathValue($subscriber_hash),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
+        $this->pathParam($resourcePath, 'subscriber_hash', $subscriber_hash);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'GET',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestGet($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function updateWorkflowEmail($workflow_id, $workflow_email_id, $body)
@@ -1100,122 +379,32 @@ class AutomationsApi
     {
         $request = $this->updateWorkflowEmailRequest($workflow_id, $workflow_email_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function updateWorkflowEmailRequest($workflow_id, $workflow_email_id, $body): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
         // verify the required parameter 'workflow_email_id' is set
-        if ($workflow_email_id === null || (is_array($workflow_email_id) && count($workflow_email_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_email_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_email_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/automations/{workflow_id}/emails/{workflow_email_id}';
+        $resourcePath = self::END_POINT . '/{workflow_id}/emails/{workflow_email_id}';
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_email_id' . '}',
-            ObjectSerializer::toPathValue($workflow_email_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
+        $this->pathParam($resourcePath, 'workflow_email_id', $workflow_email_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'PATCH',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPatch($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function create($body)
@@ -1227,98 +416,25 @@ class AutomationsApi
     {
         $request = $this->createRequest($body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function createRequest($body): Request
     {
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/automations';
+        $resourcePath = self::END_POINT;
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
 
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function pauseAllEmails($workflow_id)
@@ -1330,88 +446,25 @@ class AutomationsApi
     {
         $request = $this->pauseAllEmailsRequest($workflow_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function pauseAllEmailsRequest($workflow_id): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
 
-        $resourcePath = '/automations/{workflow_id}/actions/pause-all-emails';
+        $resourcePath = self::END_POINT . '/{workflow_id}/actions/pause-all-emails';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function startAllEmails($workflow_id)
@@ -1423,88 +476,25 @@ class AutomationsApi
     {
         $request = $this->startAllEmailsRequest($workflow_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function startAllEmailsRequest($workflow_id): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
 
-        $resourcePath = '/automations/{workflow_id}/actions/start-all-emails';
+        $resourcePath = self::END_POINT . '/{workflow_id}/actions/start-all-emails';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function pauseWorkflowEmail($workflow_id, $workflow_email_id)
@@ -1516,100 +506,28 @@ class AutomationsApi
     {
         $request = $this->pauseWorkflowEmailRequest($workflow_id, $workflow_email_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function pauseWorkflowEmailRequest($workflow_id, $workflow_email_id): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
         // verify the required parameter 'workflow_email_id' is set
-        if ($workflow_email_id === null || (is_array($workflow_email_id) && count($workflow_email_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_email_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_email_id);
 
-        $resourcePath = '/automations/{workflow_id}/emails/{workflow_email_id}/actions/pause';
+        $resourcePath = self::END_POINT . '/{workflow_id}/emails/{workflow_email_id}/actions/pause';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_email_id' . '}',
-            ObjectSerializer::toPathValue($workflow_email_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
+        $this->pathParam($resourcePath, 'workflow_email_id', $workflow_email_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function startWorkflowEmail($workflow_id, $workflow_email_id)
@@ -1621,100 +539,28 @@ class AutomationsApi
     {
         $request = $this->startWorkflowEmailRequest($workflow_id, $workflow_email_id);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function startWorkflowEmailRequest($workflow_id, $workflow_email_id): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
         // verify the required parameter 'workflow_email_id' is set
-        if ($workflow_email_id === null || (is_array($workflow_email_id) && count($workflow_email_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_email_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_email_id);
 
-        $resourcePath = '/automations/{workflow_id}/emails/{workflow_email_id}/actions/start';
+        $resourcePath = self::END_POINT . '/{workflow_id}/emails/{workflow_email_id}/actions/start';
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_email_id' . '}',
-            ObjectSerializer::toPathValue($workflow_email_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
+        $this->pathParam($resourcePath, 'workflow_email_id', $workflow_email_id);
 
         // body params
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
+        $headers = $this->setHeaders($headerParams);
 
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function addWorkflowEmailSubscriber($workflow_id, $workflow_email_id, $body)
@@ -1726,122 +572,32 @@ class AutomationsApi
     {
         $request = $this->addWorkflowEmailSubscriberRequest($workflow_id, $workflow_email_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function addWorkflowEmailSubscriberRequest($workflow_id, $workflow_email_id, $body): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
         // verify the required parameter 'workflow_email_id' is set
-        if ($workflow_email_id === null || (is_array($workflow_email_id) && count($workflow_email_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_email_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_email_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/automations/{workflow_id}/emails/{workflow_email_id}/queue';
+        $resourcePath = self::END_POINT . '/{workflow_id}/emails/{workflow_email_id}/queue';
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_email_id' . '}',
-            ObjectSerializer::toPathValue($workflow_email_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
+        $this->pathParam($resourcePath, 'workflow_email_id', $workflow_email_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 
     public function removeWorkflowEmailSubscriber($workflow_id, $body)
@@ -1853,109 +609,28 @@ class AutomationsApi
     {
         $request = $this->removeWorkflowEmailSubscriberRequest($workflow_id, $body);
 
-        try {
-            $options = $this->createHttpClientOption();
-            $response = $this->client->send($request, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if ($statusCode < 200 || $statusCode > 299) {
-                throw new ApiException(
-                    sprintf(
-                        '[%d] Error connecting to the API (%s)',
-                        $statusCode,
-                        $request->getUri()
-                    ),
-                    $statusCode,
-                    $response->getHeaders(),
-                    $response->getBody()
-                );
-            }
-
-            return json_decode($response->getBody()->getContents());
-
-        } catch (ApiException | GuzzleException $e) {
-            throw $e->getResponseBody();
-        }
+        return $this->performRequest($request);
     }
 
     protected function removeWorkflowEmailSubscriberRequest($workflow_id, $body): Request
     {
         // verify the required parameter 'workflow_id' is set
-        if ($workflow_id === null || (is_array($workflow_id) && count($workflow_id) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $workflow_id when calling '
-            );
-        }
+        $this->checkRequiredParameter($workflow_id);
         // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new InvalidArgumentException(
-                'Missing the required parameter $body when calling '
-            );
-        }
+        $this->checkRequiredParameter($body);
 
-        $resourcePath = '/automations/{workflow_id}/removed-subscribers';
+        $resourcePath = self::END_POINT . '/{workflow_id}/removed-subscribers';
         $queryParams = [];
         $headerParams = [];
-        $httpBody = '';
 
-        // path params
-        $resourcePath = str_replace(
-            '{' . 'workflow_id' . '}',
-            ObjectSerializer::toPathValue($workflow_id),
-            $resourcePath
-        );
+        $this->pathParam($resourcePath, 'workflow_id', $workflow_id);
+
+        $headers = $this->setHeaders($headerParams);
 
         // body params
-        $_tempBody = $body ?? null;
-
-        $headers = $this->headerSelector->selectHeaders(
-            ['application/json', 'application/problem+json'],
-            ['application/json']
-        );
-
         // for model (json/xml)
-        if (isset($_tempBody)) {
-            $httpBody = $_tempBody;
+        $httpBody = $this->encodeBodyWhenJSON($body, $headers);
 
-            if($headers['Content-Type'] === 'application/json') {
-                if ($httpBody instanceof stdClass) {
-                    $httpBody = \GuzzleHttp\json_encode($httpBody);
-                }
-                if (is_array($httpBody)) {
-                    $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
-                }
-            }
-        }
-
-
-        // Basic Authentication
-        if (!empty($this->config->getUsername()) && !empty($this->config->getPassword())) {
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->config->getUsername() . ":" . $this->config->getPassword());
-        }
-
-        // OAuth Authentication
-        if (!empty($this->config->getAccessToken())) {
-            $headers['Authorization'] = 'Bearer ' . $this->config->getAccessToken();
-        }
-
-        $defaultHeaders = [];
-        if ($this->config->getUserAgent()) {
-            $defaultHeaders['User-Agent'] = $this->config->getUserAgent();
-        }
-
-        $headers = array_merge(
-            $defaultHeaders,
-            $headerParams,
-            $headers
-        );
-
-        $query = Query::build($queryParams);
-        return new Request(
-            'POST',
-            $this->config->getHost() . $resourcePath . ($query ? "?$query" : ''),
-            $headers,
-            $httpBody
-        );
+        return $this->queryAndRequestPost($queryParams, $resourcePath, $headers, $httpBody);
     }
 }
