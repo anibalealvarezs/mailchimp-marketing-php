@@ -202,7 +202,7 @@ trait ApiTrait
         }
     }
 
-    protected function pathParam(&$resourcePath, $param, $key)
+    protected function pathParam(&$resourcePath, $key, $param)
     {
         $resourcePath = str_replace(
             '{' . $key . '}',
