@@ -30,6 +30,8 @@
         }
     },
     "autoload-dev": {
-        "psr-4": { "MailchimpMarketing\\" : "test/" }
+        "psr-4": {
+            "MailchimpMarketing\\" : "test/"
+        }
     }
 }
