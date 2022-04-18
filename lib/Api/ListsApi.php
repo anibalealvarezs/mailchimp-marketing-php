@@ -334,8 +334,7 @@ class ListsApi
 
     public function getListMemberTags($list_id, $subscriber_hash, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
     {
-        $response = $this->getListMemberTagsWithHttpInfo($list_id, $subscriber_hash, $fields, $exclude_fields, $count, $offset);
-        return $response;
+        return $this->getListMemberTagsWithHttpInfo($list_id, $subscriber_hash, $fields, $exclude_fields, $count, $offset);
     }
 
     public function getListMemberTagsWithHttpInfo($list_id, $subscriber_hash, $fields = null, $exclude_fields = null, $count = '10', $offset = '0')
@@ -421,8 +420,7 @@ class ListsApi
 
     public function getList($list_id, $fields = null, $exclude_fields = null, $include_total_contacts = null)
     {
-        $response = $this->getListWithHttpInfo($list_id, $fields, $exclude_fields, $include_total_contacts);
-        return $response;
+        return $this->getListWithHttpInfo($list_id, $fields, $exclude_fields, $include_total_contacts);
     }
 
     public function getListWithHttpInfo($list_id, $fields = null, $exclude_fields = null, $include_total_contacts = null)
@@ -1845,8 +1843,7 @@ class ListsApi
 
     public function createList($body)
     {
-        $response = $this->createListWithHttpInfo($body);
-        return $response;
+        return $this->createListWithHttpInfo($body);
     }
 
     public function createListWithHttpInfo($body)

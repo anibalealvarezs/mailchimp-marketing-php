@@ -31,8 +31,7 @@ class ActivityFeedApi
 
     public function getChimpChatter($count = '10', $offset = '0')
     {
-        $response = $this->getChimpChatterWithHttpInfo($count, $offset);
-        return $response;
+        return $this->getChimpChatterWithHttpInfo($count, $offset);
     }
 
     public function getChimpChatterWithHttpInfo($count = '10', $offset = '0')

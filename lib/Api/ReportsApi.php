@@ -103,8 +103,7 @@ class ReportsApi
 
     public function getCampaignAbuseReports($campaign_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->getCampaignAbuseReportsWithHttpInfo($campaign_id, $fields, $exclude_fields);
-        return $response;
+        return $this->getCampaignAbuseReportsWithHttpInfo($campaign_id, $fields, $exclude_fields);
     }
 
     public function getCampaignAbuseReportsWithHttpInfo($campaign_id, $fields = null, $exclude_fields = null)

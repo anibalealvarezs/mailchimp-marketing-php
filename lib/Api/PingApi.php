@@ -29,8 +29,7 @@ class PingApi
 
     public function get()
     {
-        $response = $this->getWithHttpInfo();
-        return $response;
+        return $this->getWithHttpInfo();
     }
 
     public function getWithHttpInfo()

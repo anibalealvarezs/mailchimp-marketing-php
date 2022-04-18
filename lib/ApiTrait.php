@@ -3,10 +3,11 @@
 namespace MailchimpMarketing;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\RequestOptions;
+use GuzzleHttp\Utils;
 use stdClass;
 use function GuzzleHttp\Psr7\str;
 
@@ -74,7 +75,7 @@ trait ApiTrait
 
         } catch (ApiException $e) {
             throw $e->getResponseBody();
-        } catch (GuzzleHttp\Exception\RequestException $e) {
+        } catch (RequestException $e) {
             throw str($e->getResponse());
         }
     }
@@ -108,10 +109,10 @@ trait ApiTrait
     {
         if($headers['Content-Type'] === 'application/json') {
             if ($httpBody instanceof stdClass) {
-                $httpBody = \GuzzleHttp\json_encode($httpBody);
+                $httpBody = Utils::jsonEncode($httpBody);
             }
             if (is_array($httpBody)) {
-                $httpBody = \GuzzleHttp\json_encode(ObjectSerializer::sanitizeForSerialization($httpBody));
+                $httpBody = Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($httpBody));
             }
         }
         return $httpBody;
